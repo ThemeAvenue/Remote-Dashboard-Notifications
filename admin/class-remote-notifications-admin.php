@@ -44,33 +44,17 @@ class Remote_Notifications_Admin {
 	 */
 	private function __construct() {
 
-		/*
-		 * @TODO :
-		 *
-		 * - Uncomment following lines if the admin class should only be available for super admins
-		 */
-		/* if( ! is_super_admin() ) {
-			return;
-		} */
-
 		/**
 		 * Call $plugin_slug from public plugin class.
 		 */
 		$plugin = Remote_Notifications::get_instance();
 		$this->plugin_slug = $plugin->get_plugin_slug();
 
-		// Load admin style sheet and JavaScript.
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
-
-		// Add the options page and menu item.
-		// add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
-
 		// Add an action link pointing to the options page.
 		$plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . $this->plugin_slug . '.php' );
-		add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 
-		add_action( 'init', array( $this, 'register_metaboxes' ) );
+		add_action( 'create_rn-channel', array( $this, 'create_channel_key' ), 10, 3 );
+		add_action( 'delete_rn-channel', array( $this, 'delete_channel_key' ), 10, 3 );
 
 	}
 
@@ -92,118 +76,37 @@ class Remote_Notifications_Admin {
 	}
 
 	/**
-	 * Register and enqueue admin-specific style sheet.
+	 * Associate a key to the term created
 	 *
-	 * @TODO:
-	 *
-	 * - Rename "Plugin_Name" to the name your plugin
-	 *
-	 * @since     1.0.0
-	 *
-	 * @return    null    Return early if no settings page is registered.
+	 * This function will save a key for each term
 	 */
-	public function enqueue_admin_styles() {
+	public function create_channel_key( $term_id, $tt_id ) {
+    	
+    	/* Get a key */
+		$key = $this->generate_key();
 
-		if ( ! isset( $this->plugin_screen_hook_suffix ) ) {
-			return;
-		}
-
-		$screen = get_current_screen();
-		if ( $this->plugin_screen_hook_suffix == $screen->id ) {
-			wp_enqueue_style( $this->plugin_slug .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), RDN_Remote_Notifications::VERSION );
-		}
+		/* Save it in DB */
+		add_option( "_rn_channel_key_$term_id", $key );
 
 	}
 
-	/**
-	 * Register and enqueue admin-specific JavaScript.
-	 *
-	 * @TODO:
-	 *
-	 * - Rename "Plugin_Name" to the name your plugin
-	 *
-	 * @since     1.0.0
-	 *
-	 * @return    null    Return early if no settings page is registered.
-	 */
-	public function enqueue_admin_scripts() {
+	public function delete_channel_key( $term_id, $tt_id ) {
 
-		if ( ! isset( $this->plugin_screen_hook_suffix ) ) {
-			return;
+		/* Save it in DB */
+		delete_option( "_rn_channel_key_$term_id" );
+
+	}
+
+	private function generate_key() {
+
+		$length = 16;
+
+		$max = ceil($length / 40);
+		$random = '';
+		for ($i = 0; $i < $max; $i ++) {
+			$random .= sha1(microtime(true).mt_rand(10000,90000));
 		}
-
-		$screen = get_current_screen();
-		if ( $this->plugin_screen_hook_suffix == $screen->id ) {
-			wp_enqueue_script( $this->plugin_slug . '-admin-script', plugins_url( 'assets/js/admin.js', __FILE__ ), array( 'jquery' ), RDN_Remote_Notifications::VERSION );
-		}
-
-	}
-
-	/**
-	 * Register the administration menu for this plugin into the WordPress Dashboard menu.
-	 *
-	 * @since    1.0.0
-	 */
-	public function add_plugin_admin_menu() {
-
-		/*
-		 * Add a settings page for this plugin to the Settings menu.
-		 *
-		 * NOTE:  Alternative menu locations are available via WordPress administration menu functions.
-		 *
-		 *        Administration Menus: http://codex.wordpress.org/Administration_Menus
-		 *
-		 * @TODO:
-		 *
-		 * - Change 'Page Title' to the title of your plugin admin page
-		 * - Change 'Menu Text' to the text for menu item for the plugin settings page
-		 * - Change 'manage_options' to the capability you see fit
-		 *   For reference: http://codex.wordpress.org/Roles_and_Capabilities
-		 */
-		$this->plugin_screen_hook_suffix = add_options_page(
-			__( 'Page Title', $this->plugin_slug ),
-			__( 'Menu Text', $this->plugin_slug ),
-			'manage_options',
-			$this->plugin_slug,
-			array( $this, 'display_plugin_admin_page' )
-		);
-
-	}
-
-	/**
-	 * Render the settings page for this plugin.
-	 *
-	 * @since    1.0.0
-	 */
-	public function display_plugin_admin_page() {
-		include_once( 'views/admin.php' );
-	}
-
-	/**
-	 * Add settings action link to the plugins page.
-	 *
-	 * @since    1.0.0
-	 */
-	public function add_action_links( $links ) {
-
-		return array_merge(
-			array(
-				'settings' => '<a href="' . admin_url( 'options-general.php?page=' . $this->plugin_slug ) . '">' . __( 'Settings', $this->plugin_slug ) . '</a>'
-			),
-			$links
-		);
-
-	}
-
-	public function register_metaboxes() {
-
-		if( class_exists( 'TAV_Register_Metabox' ) ) {
-
-			$channel = new TAV_Register_Metabox( array( 'id' => 'rdn_channel', 'title' => __( 'Channel Key', 'remote-notifications' ), 'post_type' => 'channel' ) );
-			$channel->addOption( array( 'id' => 'channel_key', 'title' => __( 'Channel Key' ), 'callback' => '' ) );
-
-		}
-
+		return substr($random, 0, $length);
 	}
 
 }
