@@ -2,7 +2,7 @@
 /**
  * FOR TESTING PURPOSE
  */
-printf( 'Payload: %s<br>', base64_encode( json_encode( array( 'channel' => 32, 'key' => 'zrgjkb87Tvubzie' ) ) ) );
+printf( 'Payload: %s<br>', base64_encode( json_encode( array( 'channel' => 35, 'key' => 'f76714a0a97d1186' ) ) ) );
 
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
@@ -62,30 +62,34 @@ if( !isset( $payload->channel ) || !isset( $payload->key ) ) {
  */
 $channel_id	 = intval( $payload->channel );
 $channel_key = sanitize_key( $payload->key );
-$channel 	 = new WP_Query( array( 'post_type' => 'channel', 'p' => $channel_id, 'post_status' => 'publish' ) );
+$channel 	 = new WP_Query( array( 'post_type' => 'notification', 'p' => $channel_id, 'post_status' => 'publish' ) );
 $channel_pid = $channel->post->ID;
-$key 		 = get_post_meta( $channel_pid, '_channel_key', true );
+$key 		 = get_option( "_rn_channel_key_$channel_id", false );
 
 /**
- * Check if the channel exists
+ * Check if taxonomy exists
  */
-if( empty( $channel->posts ) ) {
-	_e( 'The requested channel does not exist.', 'remote-notifications' );
+if( !taxonomy_exists( 'rn-channel' ) ) {
+
+	_e( 'No channels.', 'remote-notifications' );
 	exit;
+
 }
 
 /**
  * Check if the channel has a key set
  */
-if( '' == $key ) {
+if( false === $key ) {
+
 	_e( 'This channel has no key set.', 'remote-notifications' );
 	exit;
+
 } else {
 
 	/**
 	 * Check the validity of the key
 	 */
-	if( $key != $channel_key ) {
+	if( $key !== $channel_key ) {
 		_e( 'The key you provided for this channel is incorrect.', 'remote-notifications' );
 		exit;
 	}
@@ -102,13 +106,13 @@ $args = array(
 	'order' 				 => 'DESC',
 	'update_post_meta_cache' => false,
 	'update_post_term_cache' => false,
-	'meta_query' 			 => array(
+	'tax_query' 			 => array(
 		array(
-			'key' 		=> '_rdn_channel',
-			'value' 	=> $channel_pid,
-			'compare' 	=> '='
-			)
-	),
+			'taxonomy' => 'rn-channel',
+			'field'    => 'id',
+			'terms'    => $channel_id
+		)
+	)
 );
 
 /**
@@ -120,7 +124,7 @@ if( isset( $notification->post ) ) {
 
 	$alert = array(
 		'title'   => $notification->post->post_title,
-		'message' => $notification->post->post_content,
+		'message' => htmlentities( $notification->post->post_content ),
 		'slug' 	  => $notification->post->post_name,
 		'expiry'  => '',
 		'type'    => ''
