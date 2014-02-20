@@ -62,11 +62,12 @@ class Remote_Notifications {
 
 		// Load plugin text domain
 		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
+		add_action( 'init', array( $this, 'register_channel' ) );
 		add_action( 'template_redirect', array( $this, 'endpoint' ) );
 
 		// Register custom post types
 		$notifications = new TAV_Custom_Post_Type( 'Notification' );
-		$channels 	   = new TAV_Custom_Post_Type( 'Channel', array( 'supports' => 'title' ) );
+		// $channels 	   = new TAV_Custom_Post_Type( 'Channel', array( 'supports' => 'title' ) );
 
 	}
 
@@ -286,6 +287,40 @@ class Remote_Notifications {
 			}
 
 		}
+
+	}
+
+	/**
+	 * Register the "Channels" taxonomy
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_channel() {
+
+		$labels = array(
+			'name'              => _x( 'Channels', 'taxonomy general name' ),
+			'singular_name'     => _x( 'Channel', 'taxonomy singular name' ),
+			'search_items'      => __( 'Search Channels' ),
+			'all_items'         => __( 'All Channels' ),
+			'parent_item'       => __( 'Parent Channel' ),
+			'parent_item_colon' => __( 'Parent Channel:' ),
+			'edit_item'         => __( 'Edit Channel' ),
+			'update_item'       => __( 'Update Channel' ),
+			'add_new_item'      => __( 'Add New Channel' ),
+			'new_item_name'     => __( 'New Channel Name' ),
+			'menu_name'         => __( 'Channels' ),
+		);
+
+		$args = array(
+			'hierarchical'      => true,
+			'labels'            => $labels,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'query_var'         => true,
+			'rewrite'           => array( 'slug' => 'channel' ),
+		);
+
+		register_taxonomy( 'rn-channel', array( 'notification' ), $args );
 
 	}
 
