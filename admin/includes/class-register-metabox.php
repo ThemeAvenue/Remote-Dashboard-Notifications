@@ -27,16 +27,17 @@ class TAV_Register_Metabox {
 	public function __construct( $init ) {
 
 		/* Metabox settings */
-		$this->id 			= $init['id'];
-		$this->title 		= $init['title'];
-		$this->post_type 	= $init['post_type'];
+		$this->id 			= isset( $init['id'] ) ? $init['id'] : false;
+		$this->title 		= isset( $init['title'] ) ? $init['title'] : false;
+		$this->post_type 	= isset( $init['post_type'] ) ? $init['post_type'] : false;
+		$this->options 		= isset( $init['options'] ) ? $init['options'] : false;
 		$this->context 		= isset( $init['context'] ) ? $init['context'] : 'normal';
 		$this->priority 	= isset( $init['priority'] ) ? $init['priority'] : 'default';
 		$this->type 		= isset( $init['type'] ) ? $init['type'] : 'std';
 		$this->fake_pt 		= isset( $init['fake_pt'] ) ? $init['fake_pt'] : false;
 
-		/* Metabox Custom Fields */
-		$this->options 		= array();
+		if( false === ( $this->id || $this->title || $this->post_type || $this->options ) )
+			return;
 
 		/* Security nonce settings */
 		$this->nonce_name 	= isset( $init['nonce_name'] ) ? $init['nonce_name'] : 'tav_mb_nonce';
@@ -54,6 +55,60 @@ class TAV_Register_Metabox {
 
 		/* Register the metabox */
 		add_action( 'add_meta_boxes', array( $this, 'registerMetabox' ) );
+
+		/* Load required resources */
+		add_action( 'admin_print_scripts', array( $this, 'load_scripts' ) );
+		add_action( 'admin_print_styles', array( $this, 'load_styles' ) );
+
+	}
+
+	/**
+	 * Enqueue scripts required by the options used
+	 */
+	private function load_scripts() {
+
+		$options = $this->options;
+
+		foreach( $options as $option ) {
+
+			$type = isset( $option['type'] ) ? $option['type'] : false;
+
+			switch( $type ):
+
+				case 'colorpicker':
+
+					wp_enqueue_script( 'tav-colorpicker-script', plugins_url( 'my-script.js', __FILE__ ), array( 'wp-color-picker' ), false, true );
+
+				break;
+
+			endswitch;
+
+		}
+
+	}
+
+	/**
+	 * Enqueue styles required by the options used
+	 */
+	private function load_styles() {
+
+		$options = $this->options;
+
+		foreach( $options as $option ) {
+
+			$type = isset( $option['type'] ) ? $option['type'] : false;
+
+			switch( $type ):
+
+				case 'colorpicker':
+
+					wp_enqueue_style( 'wp-color-picker' );
+
+				break;
+
+			endswitch;
+
+		}
 
 	}
 
@@ -113,7 +168,7 @@ class TAV_Register_Metabox {
 
 	}
 
-	public function addOption( $args ) {
+	/*public function addOption( $args ) {
 
 		if( !isset( $args ) || ( empty( $args ) || !isset( $args['id'] ) || !isset( $args['title'] ) || !isset( $args['callback'] ) ) )
 			return;
@@ -134,8 +189,11 @@ class TAV_Register_Metabox {
 
 		array_push( $this->options, $option );
 
-	}
+	}*/
 
+	/**
+	 * Return the options list
+	 */
 	public function getOptions() {
 
 		return $this->options;
@@ -147,12 +205,18 @@ class TAV_Register_Metabox {
 	 */
 	public function displayMetabox() { ?>
 
-		<table class="form-table <?php echo $this->prefix . '-metabox-table'; ?>">
+		<table class="form-table <?php echo $this->id; ?>-metabox-table">
 			<tbody>
 
 				<?php
-				/* Output the options fields */
-				$this->outputOptionsFields();
+				$options = apply_filters( 'tav_mb_options', $this->options );
+
+				foreach( $options as $option ) {
+
+					/* Output the options fields */
+					$this->output( $option );
+
+				}
 
 				/* Add security nonce */
 				wp_nonce_field( $this->nonce_action, $this->nonce_name, false, true );
@@ -256,18 +320,6 @@ class TAV_Register_Metabox {
 
 	<?php }
 
-	protected function outputOptionsFields() {
-
-		$options = $this->options;
-
-		foreach( $options as $key => $option ) {
-
-			$option['callback']( $option );
-
-		}
-
-	}
-
 	public function saveCustomFields() {
 
 		/* We cancel loading if no POST data is submitted */
@@ -279,8 +331,8 @@ class TAV_Register_Metabox {
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE || wp_is_post_revision( $_POST['ID'] ) ) 
 			return;
 		
-		$prefix       = $this->prefix;
-		$post_id      = $_POST['ID'];
+		$name 	 = "_$this->id"; // Add the underscore to hide the custom field
+		$post_id = $_POST['ID'];
 
 		// verify this came from the our screen and with proper authorization,
 		// because save_post can be triggered at other times
@@ -298,66 +350,30 @@ class TAV_Register_Metabox {
 			return;
 		}
 
+		/* Get the list of options for this metabox */
 		$options = $this->getOptions();
+
+		/* This is our options array */
+		$opts = array();
 		
 		/* We're authenticated, let's save all the options */
 		/* We loop through all the options here */
 		foreach( $options as $key => $opt ) {
 
-			$option = $prefix . $opt['id'];
-			$oldval = get_post_meta( $post_id, $option, true );
+			/* If the option is submitted, ad it to the array */
+			if ( isset( $_POST[$opt['id']] ) ) {
 
-			/* In case it is a checkbox and no value is checked, the field won't be set in the post. Hence we need to delete the row */
-			if ( !isset( $_POST[TAV_THEME_SHORTNAME . '_' . $opt['id']] ) ) {
+				$opts[$opt['id']] = $_POST[$opt['id']];
 				
-				/* If there is a previous value */
-				if( '' != $oldval ) {
-
-					/* We delete it */
-					delete_post_meta( $post_id, $option );
-
-				}
-
-				/* Continue the loop */
-				continue;
 			}
 
-			/* The current value that has been passed in the POST */
-			$data = $_POST[TAV_THEME_SHORTNAME . '_' . $opt['id']];
-
-			/* If there is no value for this option in DB */
-			if( '' == $oldval ) {
-
-				/* If there is a non empty value passed in the POST */
-				if( '' != $data ) {
-
-					/* We add the option */
-					update_post_meta($post_id, $option, $data);
-
-				}
-
-			}
-
-			/* If there is an existing value in DB */
-			else {
-
-				/* If the current value passed for this option is empty */
-				if( !$data || $data == '' ) {
-
-					/* We delete the previous value from DB */
-					delete_post_meta( $post_id, $option );
-
-				}
-
-				/* If thee is a non empty value */
-				else {
-
-					/* We update this value in DB */
-					update_post_meta( $post_id, $option, $data, $oldval );
-
-				}
-			}
 		}
+
+		if( empty( $opts ) )
+			delete_post_meta( $post_id, $name );
+
+		else
+			update_post_meta( $post_id, $name, $opts );
 
 		do_action( 'tav_after_save_custom_fields' );
 			
@@ -382,78 +398,81 @@ class TAV_Register_Metabox {
 		}
 
 	}
-}
 
+	public function get_value( $option, $default = false, $post_id = false ) {
 
+		$pid = isset( $_GET['post'] ) ? $_GET['post'] : $post_id;
 
-/* ----------------------------------------
-* This function allows to dynamically
-* register metaboxes for any post type
----------------------------------------- */
-function n2_register_metaboxes( $options, $post_type, $callback = 'n2_loop_mb_options', $nonce_name = 'n2_nonce', $nonce_action = 'mb_nonce' ) {
-	if( !function_exists('tav_save_metabox_custom_fields') ) {
-		return 'The function required to save all the custom fields hasn\'t been found.';
+		if( false === $pid )
+			return $default;
+
+		$set = get_post_meta( $pid, "_$this->id", true );
+
+		return isset( $set[$option] ) ? $set[$option] : $default;
+
 	}
 
-	$nonce = array($nonce_name, $nonce_action);
+	/**
+	 * Output the field markup
+	 *
+	 * @param (array) Option arguments
+	 */
+	private function output( $args = array() ) {
 
-	foreach( $options as $mb => $opts ) {
-		add_meta_box($mb, $opts['title'], $callback, $post_type, $opts['context'], $opts['priority'], array($opts['options'], $nonce));
-	}
+		/* No arguments? No output! */
+		if( empty( $args ) )
+			return;
 
-	add_action('save_post','tav_save_metabox_custom_fields', 10, 4);
-	do_action('save_post', $post_type, $nonce, $options);
-}
+		/* Prepare required fields */
+		$id 	= isset( $args['id'] ) ? $args['id'] : false;
+		$title 	= isset( $args['title'] ) ? $args['title'] : false;
+		$type 	= isset( $args['type'] ) ? $args['type'] : false;
 
-/* ----------------------------------------
-* This function will output the registered
-* metaboxes
----------------------------------------- */
-function n2_loop_mb_options( $post, $options ) {
-	if( !function_exists('n2_loop_through_options') ) {
-		return 'The required function for parsing the options doesn\'t exist';
-	} ?>
-	<table class="form-table">
-	  <tbody>
-		<?php
-		/* We get the first field */
-		n2_loop_through_options($options['args'][0]);
-		$nonce_name 	= $options['args'][1][0];
-		$nonce_action 	= $options['args'][1][1];
-		wp_nonce_field( $nonce_action, $nonce_name, false, true );
+		/* If any of the required fields isn't set we abort */
+		if( false === ( $id || $title || $type ) )
+			return;
+
+		/* Prepare the possible classes */
+		$container_class = isset( $args['container_class'] ) ? $args['container_class'] : array();
+
+		/* If class is string we convert it to array */
+		if( !is_array( $container_class ) && '' != $container_class )
+			explode( ' ', $container_class );
+
+		/* Get all the classes */
+		$class = array_merge( array( 'tav-option' ), $container_class );
+
+		/* Then turn it into string */
+		$class = implode( ' ', $class );
+
+		/* Get the field value */
+		$value = $this->get_value( $id );
+
+		/* Open the danse... */
 		?>
-	  </tbody>
-	</table>
- <?php }
+		<tr valign="top" class="<?php echo $class; ?>">
+			<td scope="row"><label for="<?php echo $id; ?>"><?php echo $title; ?></label></td>
 
-/* ----------------------------------------
-* Here is an example of how to correctly 
-* register the metaboxes with their options
----------------------------------------- */
-/*
-$option_list = array(
-	'metabox_name' => array(
-		'title' 	=> __('Metabox Title', 'n2'),
-		'context' 	=> 'normal',
-		'priority' 	=> 'default',
-		'options' 	=> array(
-			array(
-				'name' 		=> 'tagline',
-				'type' 		=> 'text',
-				'std' 		=> '',
-				'desc' 		=> __('Will appear in the page header', 'n2'),
-				'title' 	=> __('Tagline', 'n2')
-			),
-			array(
-				'name' 		=> 'wip',
-				'type' 		=> 'checkbox',
-				'std' 		=> '',
-				'desc' 		=> __('Is this work in progress?', 'n2'),
-				'title' 	=> __('WIP', 'n2'),
-				'options' 	=> array('Yes')
-			),
-		)
-	),
-);
-*/
-?>
+		<?php
+		/* Now let's find the appropriate output field */
+		switch( $type ):
+
+			case 'text': ?>
+
+				<td>
+					<input type="text" id="<?php echo $id; ?>" name="<?php echo $id; ?>" value="<?php echo $value; ?>" class="regular-text" />
+				</td>
+				<td>
+					<?php if( isset( $args['desc'] ) ): ?><span class="description"><?php echo $args['desc']; ?></span><?php endif; ?>
+				</td>
+
+			<?php break;
+
+		endswitch;
+		?>
+
+		</tr>
+
+		<?php
+	}
+}

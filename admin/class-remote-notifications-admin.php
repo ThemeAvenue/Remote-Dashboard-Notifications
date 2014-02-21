@@ -55,6 +55,14 @@ class Remote_Notifications_Admin {
 
 		add_action( 'create_rn-channel', array( $this, 'create_channel_key' ), 10, 3 );
 		add_action( 'delete_rn-channel', array( $this, 'delete_channel_key' ), 10, 3 );
+		add_action( 'rn-channel_edit_form_fields', array( $this, 'show_channel_key' ), 10, 2 );
+
+		/* Register custom metaboxes and options */
+		/*$options = array(
+			array( 'id' => 'color', 'title' => __( 'Background Color', 'remote-notification' ), 'type' => 'colorpicker' )
+		);
+
+		$this->mb = new TAV_Register_Metabox( array( 'id' => 'rn_options', 'title' => __( 'Options', 'remote-notification' ), 'post_type' => 'notification', 'options' => $options ) );*/
 
 	}
 
@@ -109,4 +117,32 @@ class Remote_Notifications_Admin {
 		return substr($random, 0, $length);
 	}
 
+	public function show_channel_key( $tag ) {  
+
+		$term_id = $tag->term_id;
+		$key 	 = get_option( "_rn_channel_key_$term_id", false );
+
+		if( false === $key )
+			return;
+    
+    	?>
+    	<tr class="form-field">  
+			<th scope="row" valign="top">  
+				<label><?php _e( 'Channel ID', 'remote-notification' ); ?></label>  
+			</th>  
+			<td>
+				<code><?php echo $term_id; ?></code>
+			</td>
+		</tr>  
+
+    	<tr class="form-field">  
+			<th scope="row" valign="top">  
+				<label><?php _e( 'Channel Key', 'remote-notification' ); ?></label>  
+			</th>  
+			<td>
+				<code><?php echo $key; ?></code>
+			</td>
+		</tr>
+
+    <?php } 
 }
