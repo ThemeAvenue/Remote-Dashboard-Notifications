@@ -1,9 +1,7 @@
 <?php
 /**
- * FOR TESTING PURPOSE
+ * Get requester user agent
  */
-printf( 'Payload: %s<br>', base64_encode( json_encode( array( 'channel' => 35, 'key' => 'f76714a0a97d1186' ) ) ) );
-
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
 /**
@@ -127,8 +125,22 @@ if( isset( $notification->post ) ) {
 		'message' => htmlentities( $notification->post->post_content ),
 		'slug' 	  => $notification->post->post_name,
 		'expiry'  => '',
-		'type'    => ''
+		'type'    => array()
 	);
+
+	/* Check if there are post types limitations */
+	$pt = wp_get_post_terms( $notification->post->ID, 'rn-pt' );
+
+	/* Add the supported post types to the response */
+	if( is_array( $pt ) && !empty( $pt ) ) {
+
+		foreach( $pt as $type ) {
+
+			array_push( $alert['type'], $type->slug );
+
+		}
+
+	}
 
 	echo json_encode( $alert );
 
