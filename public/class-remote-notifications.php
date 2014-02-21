@@ -63,6 +63,7 @@ class Remote_Notifications {
 		// Load plugin text domain
 		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( $this, 'register_channel' ) );
+		add_action( 'init', array( $this, 'register_post_type' ) );
 		add_action( 'template_redirect', array( $this, 'endpoint' ) );
 
 		// Register custom post types
@@ -321,6 +322,43 @@ class Remote_Notifications {
 		);
 
 		register_taxonomy( 'rn-channel', array( 'notification' ), $args );
+
+	}
+
+	/**
+	 * Register the post type taxonomy
+	 *
+	 * This taxonomy will be used to limit notices
+	 * display on specific post types only.
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_post_type() {
+
+		$labels = array(
+			'name'              => _x( 'Post Types Limitation', 'taxonomy general name' ),
+			'singular_name'     => _x( 'Post Type', 'taxonomy singular name' ),
+			'search_items'      => __( 'Search Post Types' ),
+			'all_items'         => __( 'All Post Types' ),
+			'parent_item'       => __( 'Parent Post Type' ),
+			'parent_item_colon' => __( 'Parent Post Type:' ),
+			'edit_item'         => __( 'Edit Post Type' ),
+			'update_item'       => __( 'Update Post Type' ),
+			'add_new_item'      => __( 'Add New Post Type' ),
+			'new_item_name'     => __( 'New Post Type Name' ),
+			'menu_name'         => __( 'Post Types' ),
+		);
+
+		$args = array(
+			'hierarchical'      => false,
+			'labels'            => $labels,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'query_var'         => true,
+			'rewrite'           => array( 'slug' => 'post-type' ),
+		);
+
+		register_taxonomy( 'rn-pt', array( 'notification' ), $args );
 
 	}
 
