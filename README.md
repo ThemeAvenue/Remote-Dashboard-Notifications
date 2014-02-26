@@ -19,7 +19,7 @@ The client site will then cache this response and display it as an admin notice 
 
 It is really easy to integrate this feature in a plugin or theme. Only two steps are required:
 
-1. Add the client class `class-remote-notification-client.php` to the theme / plugin
+1. Copy `includes/class-remote-notification-client.php` into the theme / plugin directory
 2. Instanciate the class with the server's URL, a channel ID and key
 
 ### Integration examples ###
