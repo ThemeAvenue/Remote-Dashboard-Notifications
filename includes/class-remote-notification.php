@@ -188,22 +188,21 @@ class TAV_Remote_Notification_Client {
 
 		/* Prepare alert class */
 		$style = isset( $content->style ) ? $content->style : 'default';
-		$class = "rn-alert rn-alert-$class";
+		$class = "rn-alert rn-alert-$style";
 
 		if( 'default' == $style )
 			$class = 'updated ' . $class;
 
-		/* Prepare the dismiss URL */
-		$url = wp_nonce_url(  add_query_arg( array( 'notification' => $content->slug ), '' ), 'rn-dismiss', 'rn' ); ?>
-
-		<!-- <div class="updated rn-notice">
-			<h2><?php echo $content->title; ?></h2>
-			<p><?php echo html_entity_decode( $content->message ); ?></p>
-			<p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notification' ); ?></a></p>
-		</div> -->
+		/**
+		 * Prepare the dismiss URL
+		 * 
+		 * @var (string) URL
+		 * @todo get a more accurate URL of the current page
+		 */
+		$url = wp_nonce_url(  add_query_arg( array( 'notification' => $content->slug ), get_current_screen()->parent_file ), 'rn-dismiss', 'rn' ); ?>
 
 		<div class="<?php echo $class; ?>">
-			<a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notificatin' ); ?>">&times;</a>
+			<?php if( 'default' != $style ): ?><a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notificatin' ); ?>">&times;</a><?php endif; ?>
 			<h2><?php echo $content->title; ?></h2>
 			<p><?php echo html_entity_decode( $content->message ); ?></p>
 			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notification' ); ?></a></p><?php endif; ?>
@@ -244,6 +243,13 @@ class TAV_Remote_Notification_Client {
 
 	}
 
+	/**
+	 * Adds inline style for non standard notices
+	 *
+	 * This function will only be called if the notice style is not standard.
+	 *
+	 * @since 0.1.0
+	 */
 	public function style() { ?>
 
 		<style type="text/css">
