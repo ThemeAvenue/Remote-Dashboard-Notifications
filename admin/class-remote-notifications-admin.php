@@ -170,17 +170,18 @@ class Remote_Notifications_Admin {
 		* Use get_post_meta() to retrieve an existing value
 		* from the database and use the value for the form.
 		*/
-		$value = get_post_meta( $post->ID, '_my_meta_value_key', true );
+		$value = get_post_meta( $post->ID, '_rn_settings', true );
+		$style = isset( $value['style'] ) ? $value['style'] : '';
 		?>
 
 		<label for="rn_style" class="screen-reader-text"><?php _e( 'Notice Style', 'remote-notification' ); ?></label>
 		<p><strong><?php _e( 'Notice Style', 'remote-notification' ); ?></strong></p>
 		<select id="rn_style" name="rn_settings[style]">
-			<option value="default"><?php _e( 'Default', 'remote-notification' ); ?></option>
-			<option value="success"><?php _e( 'Success', 'remote-notification' ); ?></option>
-			<option value="info"><?php _e( 'Info', 'remote-notification' ); ?></option>
-			<option value="warning"><?php _e( 'Warning', 'remote-notification' ); ?></option>
-			<option value="danger"><?php _e( 'Danger', 'remote-notification' ); ?></option>
+			<option value="default" <?php if( 'default' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Default', 'remote-notification' ); ?></option>
+			<option value="success" <?php if( 'success' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Success', 'remote-notification' ); ?></option>
+			<option value="info" <?php if( 'info' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Info', 'remote-notification' ); ?></option>
+			<option value="warning" <?php if( 'warning' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Warning', 'remote-notification' ); ?></option>
+			<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notification' ); ?></option>
 		</select>
 
 	<?php }
