@@ -44,6 +44,7 @@ class TAV_Custom_Post_Type {
 			if( !post_type_exists( $this->cpt_slug ) ) {
 
 				add_action( 'init', array( $this, 'register_post_type' ) );
+				add_filter( 'post_updated_messages', array( $this, 'updated_messages' ) );
 
 			}
 
@@ -124,6 +125,35 @@ class TAV_Custom_Post_Type {
 
 		return array_merge( $args, $this->args );
 
+	}
+
+	/**
+	 * Custom updated messages
+	 */
+	function updated_messages( $messages ) {
+
+		global $post, $post_ID;
+
+		$singular = $this->cpt_name;
+
+		$messages[$this->cpt_slug] = array(
+			0 => '', // Unused. Messages start at index 1.
+			1 => sprintf( __( "$singular updated. <a href='%s'>View $singular</a>", 'your_text_domain'), esc_url( get_permalink($post_ID) ) ),
+			2 => __( 'Custom field updated.', 'your_text_domain'),
+			3 => __( 'Custom field deleted.', 'your_text_domain'),
+			4 => __( "$singular updated.", 'your_text_domain'),
+			/* translators: %s: date and time of the revision */
+			5 => isset($_GET['revision']) ? sprintf( __( "$singular restored to revision from %s", 'your_text_domain'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+			6 => sprintf( __( "$singular published. <a href='%s'>View $singular</a>", 'your_text_domain'), esc_url( get_permalink($post_ID) ) ),
+			7 => __( "$singular saved.", 'your_text_domain' ),
+			8 => sprintf( __( "$singular submitted. <a target='_blank' href='%s'>Preview $singular</a>", 'your_text_domain'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+			9 => sprintf( __( "$singular scheduled for: <strong>%1$s</strong>. <a target='_blank' href='%2$s'>Preview $singular</a>", 'your_text_domain'),
+			// translators: Publish box date format, see http://php.net/date
+				date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink($post_ID) ) ),
+			10 => sprintf( __( "$singular draft updated. <a target='_blank' href='%s'>Preview $singular</a>", 'your_text_domain'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+		);
+
+		return $messages;
 	}
 
 	/**
