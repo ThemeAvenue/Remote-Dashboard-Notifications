@@ -75,13 +75,13 @@ class TAV_Remote_Notification_Client {
 		$request = null;
 
 		/* If no notice is present in DB we query the server */
-		if( false === $content ) {
+		if( false === $content || defined( 'RDN_DEV' ) && RDN_DEV ) {
 
 			/* Prepare the payload to send to server */
 			$payload = base64_encode( json_encode( array( 'channel' => $this->id, 'key' => $this->key ) ) );
 
 			/* Get the endpoint URL ready */
-			$url = "$this->server?payload=$payload&ver=1";
+			$url = add_query_arg( array( 'payload' => $payload ), $this->server );
 
 			/* Query the server */
 			$request = wp_remote_get( $url, array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
