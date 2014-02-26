@@ -84,7 +84,7 @@ class TAV_Remote_Notification_Client {
 			$url = "$this->server?payload=$payload&ver=1";
 
 			/* Query the server */
-			$request = wp_remote_get( $url );
+			$request = wp_remote_get( $url, array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
 
 			/* If we have a WP_Error object we abort */
 			if( is_wp_error( $request ) )
