@@ -14,4 +14,5 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// @TODO: Define uninstall functionality here
+/* Delete the dismissed notifications list */
+delete_option( '_rn_dismissed' );
