@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Developers, have you ever wanted to ask something to your users? Tried to get some feedback about your product? Want them to leave a comment on your site? This plugin will help you do that. 
+Developers, have you ever wanted to ask something to your users? Tried to get some feedback about your product? This plugin will help you do that. 
 
 == Description ==
 
