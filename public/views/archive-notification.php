@@ -120,6 +120,9 @@ $notification = new WP_Query( $args );
 
 if( isset( $notification->post ) ) {
 
+	/* Get settings */
+	$settings = get_post_meta( $notification->post->ID, '_rn_settings', true );
+
 	$alert = array(
 		'title'   => $notification->post->post_title,
 		'message' => htmlentities( $notification->post->post_content ),
@@ -127,6 +130,9 @@ if( isset( $notification->post ) ) {
 		'expiry'  => '',
 		'type'    => array()
 	);
+
+	/* Add settings */
+	$alert = array_merge( $alert, $settings );
 
 	/* Check if there are post types limitations */
 	$pt = wp_get_post_terms( $notification->post->ID, 'rn-pt' );
