@@ -135,6 +135,11 @@ class TAV_Remote_Notification_Client {
 				return;
 
 			/**
+			 * Add the notice style
+			 */
+			add_action( 'admin_print_styles', array( $this, 'style' ) );
+
+			/**
 			 * Add the notice to WP dashboard
 			 */
 			add_action( 'admin_notices', array( $this, 'show_notice' ) );
@@ -181,13 +186,27 @@ class TAV_Remote_Notification_Client {
 
 		}
 
+		/* Prepare alert class */
+		$style = isset( $content->style ) ? $content->style : 'default';
+		$class = "rn-alert rn-alert-$class";
+
+		if( 'default' == $style )
+			$class = 'updated ' . $class;
+
 		/* Prepare the dismiss URL */
 		$url = wp_nonce_url(  add_query_arg( array( 'notification' => $content->slug ), '' ), 'rn-dismiss', 'rn' ); ?>
 
-		<div class="updated rn-notice">
-			<a href="<?php echo $url; ?>" class="rn-dismiss-button"><?php _e( 'Dismiss', 'remote-notification' ); ?></a>
+		<!-- <div class="updated rn-notice">
 			<h2><?php echo $content->title; ?></h2>
 			<p><?php echo html_entity_decode( $content->message ); ?></p>
+			<p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notification' ); ?></a></p>
+		</div> -->
+
+		<div class="<?php echo $class; ?>">
+			<a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notificatin' ); ?>">&times;</a>
+			<h2><?php echo $content->title; ?></h2>
+			<p><?php echo html_entity_decode( $content->message ); ?></p>
+			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notification' ); ?></a></p><?php endif; ?>
 		</div>
 		<?php
 
@@ -224,5 +243,13 @@ class TAV_Remote_Notification_Client {
 		update_option( '_rn_dismissed', $dismissed );
 
 	}
+
+	public function style() { ?>
+
+		<style type="text/css">
+			.rn-alert{padding:15px;padding-right:35px;margin-bottom:20px;border:1px solid transparent;border-radius:4px}.rn-alert hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0;margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}.rn-alert h1,h2,h3,h4,h5,h6{margin-top:0;color:inherit}.rn-alert a{font-weight:700}.rn-alert>p,.rn-alert>ul{margin-bottom:0}.rn-alert>p+p{margin-top:5px}.rn-alert .rn-dismiss-btn{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;top:-2px;right:-21px;padding:0;cursor:pointer;background:0;border:0;-webkit-appearance:none;float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0 #fff;opacity:.2;filter:alpha(opacity=20);text-decoration:none}.rn-alert-success{background-color:#dff0d8;border-color:#d6e9c6;color:#3c763d}.rn-alert-success hr{border-top-color:#c9e2b3}.rn-alert-success a{color:#2b542c}.rn-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#31708f}.rn-alert-info hr{border-top-color:#a6e1ec}.rn-alert-info a{color:#245269}.rn-alert-warning{background-color:#fcf8e3;border-color:#faebcc;color:#8a6d3b}.rn-alert-warning hr{border-top-color:#f7e1b5}.rn-alert-warning a{color:#66512c}.rn-alert-danger{background-color:#f2dede;border-color:#ebccd1;color:#a94442}.rn-alert-danger hr{border-top-color:#e4b9c0}.rn-alert-danger a{color:#843534}
+		</style>
+
+	<?php }
 
 }
