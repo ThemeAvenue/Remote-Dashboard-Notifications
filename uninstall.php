@@ -15,35 +15,16 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 /* Delete channels and post types */
-delete_custom_terms( 'rn-channel' );
-delete_custom_terms( 'rn-pt' );
-
-/**
- * Delete all the notifications saved in DB
- */
-$args = array(
-	'numberposts'			 => -1,
-	'post_type' 			 => 'notification',
-	'update_post_term_cache' => false,
-	'update_post_meta_cache' => false,
-	'cache_results' 		 => false
-);
-
-$posts = new WP_Query( $args );
-
-if( isset( $posts->posts ) && is_array( $posts->posts ) ) {
-
-   foreach( $posts->posts as $post )
-       wp_delete_post( $post->ID, true );
-
-}
+rn_delete_custom_terms( 'rn-channel' );
+rn_delete_custom_terms( 'rn-pt' );
+rn_delete_notifications();
 
 /**
  * Detete all terms of a taxonomy
  *
  * @link http://wordpress.stackexchange.com/questions/119229/how-to-delete-custom-taxonomy-terms-in-plugins-uninstall-php
  */
-function delete_custom_terms( $taxonomy ) {
+function rn_delete_custom_terms( $taxonomy ) {
 
 	global $wpdb;
 
@@ -57,6 +38,33 @@ function delete_custom_terms( $taxonomy ) {
 
 	foreach( $terms as $term ) {
 		wp_delete_term( $term->term_id, $taxonomy );
+	}
+
+}
+
+/**
+ * Delete all the notifications saved in DB
+ */
+function rn_delete_notifications() {
+
+	global $wpdb;
+
+	$args = array(
+		'posts_per_page'		 => -1,
+		'post_type' 			 => 'notification',
+		'post_status' 			 => array( 'any', 'auto-draft' ),
+		'update_post_term_cache' => false,
+		'update_post_meta_cache' => false,
+		'cache_results' 		 => false
+	);
+
+	$posts = new WP_Query( $args );
+
+	if( isset( $posts->posts ) && is_array( $posts->posts ) ) {
+
+		foreach( $posts->posts as $post )
+			wp_delete_post( $post->ID, true );
+
 	}
 
 }
