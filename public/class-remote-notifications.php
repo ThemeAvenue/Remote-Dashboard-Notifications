@@ -68,7 +68,6 @@ class Remote_Notifications {
 
 		// Register custom post types
 		$notifications = new TAV_Custom_Post_Type( 'Notification' );
-		// $channels 	   = new TAV_Custom_Post_Type( 'Channel', array( 'supports' => 'title' ) );
 
 	}
 
@@ -223,7 +222,7 @@ class Remote_Notifications {
 	 * @since    1.0.0
 	 */
 	private static function single_activate() {
-		// @TODO: Define activation functionality here
+		flush_rewrite_rules();
 	}
 
 	/**
@@ -232,7 +231,7 @@ class Remote_Notifications {
 	 * @since    1.0.0
 	 */
 	private static function single_deactivate() {
-		// @TODO: Define deactivation functionality here
+		flush_rewrite_rules();
 	}
 
 	/**
