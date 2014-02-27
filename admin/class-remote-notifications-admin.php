@@ -44,27 +44,22 @@ class Remote_Notifications_Admin {
 	 */
 	private function __construct() {
 
+		add_action( 'create_rn-channel', array( $this, 'create_channel_key' ), 10, 3 );
+		add_action( 'delete_rn-channel', array( $this, 'delete_channel_key' ), 10, 3 );
+
+		/* The rest isn't needed during Ajax */
+		if( defined( 'DOING_AJAX' ) && DOING_AJAX )
+			return;
+
 		/**
 		 * Call $plugin_slug from public plugin class.
 		 */
 		$plugin = Remote_Notifications::get_instance();
 		$this->plugin_slug = $plugin->get_plugin_slug();
 
-		// Add an action link pointing to the options page.
-		$plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . $this->plugin_slug . '.php' );
-
-		add_action( 'create_rn-channel', array( $this, 'create_channel_key' ), 10, 3 );
-		add_action( 'delete_rn-channel', array( $this, 'delete_channel_key' ), 10, 3 );
 		add_action( 'rn-channel_edit_form_fields', array( $this, 'show_channel_key' ), 10, 2 );
 		add_action( 'add_meta_boxes', array( $this, 'metabox' ) );
 		add_action( 'save_post', array( $this, 'save_settings' ) );
-
-		/* Register custom metaboxes and options */
-		/*$options = array(
-			array( 'id' => 'color', 'title' => __( 'Background Color', 'remote-notification' ), 'type' => 'colorpicker' )
-		);
-
-		$this->mb = new TAV_Register_Metabox( array( 'id' => 'rn_options', 'title' => __( 'Options', 'remote-notification' ), 'post_type' => 'notification', 'options' => $options ) );*/
 
 	}
 
@@ -124,9 +119,20 @@ class Remote_Notifications_Admin {
 		$term_id = $tag->term_id;
 		$key 	 = get_option( "_rn_channel_key_$term_id", false );
 
-		if( false === $key )
-			return;
-    
+		if( false === $key ) { ?>
+
+			<tr class="form-field">  
+				<th scope="row" valign="top">  
+					<label><?php _e( 'Channel Key', 'remote-notifications' ); ?></label>  
+				</th>  
+				<td>
+					<?php _e( 'An error occured during key generation. Please delete this channel and recreate it.', 'remote-notifications' ); ?>
+				</td>
+			</tr>  
+
+			<?php return;
+
+		}    
     	?>
     	<tr class="form-field">  
 			<th scope="row" valign="top">  

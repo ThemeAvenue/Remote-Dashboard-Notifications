@@ -13,8 +13,8 @@
  *
  * @wordpress-plugin
  * Plugin Name:       Remote Dashboard Notifications
- * Plugin URI:        http://themeavenue.net
- * Description:       Pushes notifications to the WordPress dashboard
+ * Plugin URI:        https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
+ * Description:       Remote Dashboard Notifications is made for themes and plugins developers who want to send short notifications to their users.
  * Version:           1.0.0
  * Author:            ThemeAvenue
  * Author URI:        http://themeavenue.net
@@ -22,7 +22,6 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Domain Path:       /languages
- * GitHub Plugin URI: https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
  */
 
 // If this file is called directly, abort.
@@ -58,9 +57,17 @@ add_action( 'plugins_loaded', array( 'Remote_Notifications', 'get_instance' ) );
 /**
  * The code below is intended to to give the lightest footprint possible.
  */
-if ( is_admin() && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
+if ( is_admin() ) {
 
-	require_once( plugin_dir_path( __FILE__ ) . 'admin/class-remote-notifications-admin.php' );
+	require_once( RDN_PATH . 'admin/class-remote-notifications-admin.php' );
 	add_action( 'plugins_loaded', array( 'Remote_Notifications_Admin', 'get_instance' ) );
+
+	/**
+	 * Instanciate the client class
+	 */
+	require_once( RDN_PATH . 'includes/class-remote-notification-client.php' );
+
+	if( class_exists( 'TAV_Remote_Notification_Client' ) )
+		$rdn = new TAV_Remote_Notification_Client( 116, '88d07387308e6b7f', 'http://support.themeavenue.net?post_type=notification' );
 
 }
