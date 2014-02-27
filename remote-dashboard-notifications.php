@@ -38,25 +38,16 @@ define( 'RDN_PATH', plugin_dir_path( __FILE__ ) );
  *----------------------------------------------------------------------------*/
 
 require_once( plugin_dir_path( __FILE__ ) . 'public/class-remote-notifications.php' );
-require_once( plugin_dir_path( __FILE__ ) . 'public/includes/class-custom-post-type.php' );
 
 /*
  * Register hooks that are fired when the plugin is activated or deactivated.
  * When the plugin is deleted, the uninstall.php file is loaded.
- *
- * @TODO:
- *
- * - replace Plugin_Name with the name of the class defined in
- *   `class-plugin-name.php`
  */
 register_activation_hook( __FILE__, array( 'Remote_Notifications', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'Remote_Notifications', 'deactivate' ) );
 
-/*
- * @TODO:
- *
- * - replace Plugin_Name with the name of the class defined in
- *   `class-plugin-name.php`
+/**
+ * Instanciate public class
  */
 add_action( 'plugins_loaded', array( 'Remote_Notifications', 'get_instance' ) );
 
@@ -67,10 +58,9 @@ add_action( 'plugins_loaded', array( 'Remote_Notifications', 'get_instance' ) );
 /**
  * The code below is intended to to give the lightest footprint possible.
  */
-if ( is_admin() /*&& ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX )*/ ) {
+if ( is_admin() && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
 
 	require_once( plugin_dir_path( __FILE__ ) . 'admin/class-remote-notifications-admin.php' );
-
 	add_action( 'plugins_loaded', array( 'Remote_Notifications_Admin', 'get_instance' ) );
 
 }

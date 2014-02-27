@@ -27,7 +27,7 @@ class TAV_Custom_Post_Type {
 	 */
 	protected static $instance = null;
 
-	public function __construct( $name = false, $args = array(), $labels = array() ) {
+	public function __construct( $name = false, $args = array(), $labels = array(), $domain = 'remote-notifications' ) {
 
 		/**
 		 * A name for the custom post type is the minimum required.
@@ -40,6 +40,7 @@ class TAV_Custom_Post_Type {
 			$this->cpt_slug 	   = sanitize_title( $name );
 			$this->labels 		   = $labels;
 			$this->args 		   = $args;
+			$this->domain 		   = $domain;
 
 			if( !post_type_exists( $this->cpt_slug ) ) {
 
@@ -82,17 +83,17 @@ class TAV_Custom_Post_Type {
 
 		/* Set the default labels */
 		$labels = array(
-			'name'                  => _x( $plural, 'post type general name' ),  
-			'singular_name'         => _x( $singular, 'post type singular name' ),  
-			'add_new'               => _x( 'Add New', strtolower( $singular ) ),  
-			'add_new_item'          => __( 'Add New ' . $singular ),  
-			'edit_item'             => __( 'Edit ' . $singular ),  
-			'new_item'              => __( 'New ' . $singular ),  
-			'all_items'             => __( 'All ' . $plural ),  
-			'view_item'             => __( 'View ' . $singular ),  
-			'search_items'          => __( 'Search ' . $plural ),  
-			'not_found'             => __( 'No ' . strtolower( $singular ) . ' found'),  
-			'not_found_in_trash'    => __( 'No ' . strtolower( $plural ) . ' found in Trash'),   
+			'name'                  => _x( $plural, 'post type general name', $this->domain ),  
+			'singular_name'         => _x( $singular, 'post type singular name', $this->domain ),  
+			'add_new'               => __( 'Add New', $this->domain ),  
+			'add_new_item'          => sprintf( __( 'Add New %s', $this->domain ), $singular ),  
+			'edit_item'             => sprintf( __( 'Edit %s', $this->domain ), $singular ),  
+			'new_item'              => sprintf( __( 'New %s', $this->domain ), $singular ),  
+			'all_items'             => sprintf( __( 'All %s', $this->domain ), $plural ),  
+			'view_item'             => sprintf( __( 'View %s', $this->domain ), $singular ),  
+			'search_items'          => sprintf( __( 'Search %s', $this->domain ), $plural ),  
+			'not_found'             => sprintf( __( 'No %s found', $this->domain ), strtolower( $singular ) ),  
+			'not_found_in_trash'    => sprintf( __( 'No %s found in Trash', $this->domain ), strtolower( $plural ) ),   
 			'parent_item_colon'     => '',  
 			'menu_name'             => $plural
 		);

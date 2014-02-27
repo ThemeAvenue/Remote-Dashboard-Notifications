@@ -130,7 +130,7 @@ class Remote_Notifications_Admin {
     	?>
     	<tr class="form-field">  
 			<th scope="row" valign="top">  
-				<label><?php _e( 'Channel ID', 'remote-notification' ); ?></label>  
+				<label><?php _e( 'Channel ID', 'remote-notifications' ); ?></label>  
 			</th>  
 			<td>
 				<code><?php echo $term_id; ?></code>
@@ -139,7 +139,7 @@ class Remote_Notifications_Admin {
 
     	<tr class="form-field">  
 			<th scope="row" valign="top">  
-				<label><?php _e( 'Channel Key', 'remote-notification' ); ?></label>  
+				<label><?php _e( 'Channel Key', 'remote-notifications' ); ?></label>  
 			</th>  
 			<td>
 				<code><?php echo $key; ?></code>
@@ -153,7 +153,7 @@ class Remote_Notifications_Admin {
 	*/
 	public function metabox() {
 
-		add_meta_box( 'rn_settings', __( 'Settings', 'remote-notification' ), array( $this, 'notice_settings' ), 'notification', 'side' );
+		add_meta_box( 'rn_settings', __( 'Settings', 'remote-notifications' ), array( $this, 'notice_settings' ), 'notification', 'side' );
 
 	}
 
@@ -174,14 +174,14 @@ class Remote_Notifications_Admin {
 		$style = isset( $value['style'] ) ? $value['style'] : '';
 		?>
 
-		<label for="rn_style" class="screen-reader-text"><?php _e( 'Notice Style', 'remote-notification' ); ?></label>
+		<label for="rn_style" class="screen-reader-text"><?php _e( 'Notice Style', 'remote-notifications' ); ?></label>
 		<p><strong><?php _e( 'Notice Style', 'remote-notification' ); ?></strong></p>
 		<select id="rn_style" name="rn_settings[style]">
-			<option value="default" <?php if( 'default' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Default', 'remote-notification' ); ?></option>
-			<option value="success" <?php if( 'success' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Success', 'remote-notification' ); ?></option>
-			<option value="info" <?php if( 'info' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Info', 'remote-notification' ); ?></option>
-			<option value="warning" <?php if( 'warning' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Warning', 'remote-notification' ); ?></option>
-			<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notification' ); ?></option>
+			<option value="default" <?php if( 'default' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Default', 'remote-notifications' ); ?></option>
+			<option value="success" <?php if( 'success' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Success', 'remote-notifications' ); ?></option>
+			<option value="info" <?php if( 'info' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Info', 'remote-notifications' ); ?></option>
+			<option value="warning" <?php if( 'warning' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Warning', 'remote-notifications' ); ?></option>
+			<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notifications' ); ?></option>
 		</select>
 
 	<?php }

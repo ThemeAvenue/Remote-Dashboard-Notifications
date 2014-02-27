@@ -61,13 +61,18 @@ class Remote_Notifications {
 	public function __construct() {
 
 		// Load plugin text domain
-		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
-		add_action( 'init', array( $this, 'register_channel' ) );
-		add_action( 'init', array( $this, 'register_post_type' ) );
-		add_action( 'template_redirect', array( $this, 'endpoint' ) );
+		add_action( 'init', array( $this, 'load_plugin_textdomain' ), 1 );
 
-		// Register custom post types
-		$notifications = new TAV_Custom_Post_Type( 'Notification', array('menu_icon' => 'dashicons-format-chat' ) );
+		// Register post type
+		add_action( 'init', array( $this, 'register_notification_post_type' ) );
+		add_filter( 'post_updated_messages', array( $this, 'updated_messages' ) );
+
+		// Register taxonomies
+		add_action( 'init', array( $this, 'register_channel' ), 10 );
+		add_action( 'init', array( $this, 'register_post_type' ), 10 );
+
+		// Add endpoint
+		add_action( 'template_redirect', array( $this, 'endpoint' ) );
 
 	}
 
@@ -244,7 +249,12 @@ class Remote_Notifications {
 		$domain = $this->plugin_slug;
 		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
-		load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
+		$loaded = load_textdomain( $domain, RDN_PATH . 'languages/' . $domain . '-' . $locale . '.mo' );
+
+		if( !$loaded )
+			echo 'merde';
+
+		// load_plugin_textdomain( $domain, false, RDN_PATH . 'languages/' );
 
 	}
 
@@ -291,6 +301,79 @@ class Remote_Notifications {
 	}
 
 	/**
+	 * Register notification post type
+	 *
+	 * @since 1.0.0
+	 */
+	public function register_notification_post_type() {
+
+		/* Set the default labels */
+		$labels = array(
+			'name'                  => _x( 'Notification', 'post type general name', 'remote-notifications' ),  
+			'singular_name'         => _x( 'Notification', 'post type singular name', 'remote-notifications' ),  
+			'add_new'               => __( 'Add New', 'remote-notifications' ),  
+			'add_new_item'          => __( 'Add New Notification', 'remote-notifications' ),  
+			'edit_item'             => __( 'Edit Notification', 'remote-notifications' ),  
+			'new_item'              => __( 'New Notification', 'remote-notifications' ),  
+			'all_items'             => __( 'All Notifications', 'remote-notifications' ),  
+			'view_item'             => __( 'View Notification', 'remote-notifications' ),  
+			'search_items'          => __( 'Search Notifications', 'remote-notifications' ),  
+			'not_found'             => __( 'No Notification found', 'remote-notifications' ),  
+			'not_found_in_trash'    => __( 'No Notification found in Trash', 'remote-notifications' ),   
+			'parent_item_colon'     => '',
+			'menu_icon' 			=> 'dashicons-format-chat',
+			'menu_name'             => __( 'Notifications', 'remote-notifications' )
+		);
+
+		/* Post type settings */
+		$args = array(
+			'labels'             => $labels,
+			'public'             => true,
+			'publicly_queryable' => true,
+			'show_ui'            => true,
+			'show_in_menu'       => true,
+			'query_var'          => true,
+			'capability_type'    => 'post',
+			'has_archive'        => true,
+			'hierarchical'       => false,
+			'menu_position'      => null,
+			'supports'           => array( 'title', 'editor' )
+		);
+
+		register_post_type( 'notification', $args );
+
+	}
+
+	/**
+	 * Custom updated messages
+	 */
+	function updated_messages( $messages ) {
+
+		global $post, $post_ID;
+
+		$singular = $this->cpt_name;
+
+		$messages[$this->cpt_slug] = array(
+			0 => '', // Unused. Messages start at index 1.
+			1 => sprintf( __( "$singular updated. <a href='%s'>View $singular</a>", 'remote-notifications'), esc_url( get_permalink($post_ID) ) ),
+			2 => __( 'Custom field updated.', 'remote-notifications'),
+			3 => __( 'Custom field deleted.', 'remote-notifications'),
+			4 => __( "$singular updated.", 'remote-notifications'),
+			/* translators: %s: date and time of the revision */
+			5 => isset($_GET['revision']) ? sprintf( __( "$singular restored to revision from %s", 'remote-notifications'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+			6 => sprintf( __( "$singular published. <a href='%s'>View $singular</a>", 'remote-notifications'), esc_url( get_permalink($post_ID) ) ),
+			7 => __( "$singular saved.", 'remote-notifications' ),
+			8 => sprintf( __( "$singular submitted. <a target='_blank' href='%s'>Preview $singular</a>", 'remote-notifications'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+			9 => sprintf( __( "$singular scheduled for: <strong>%1$s</strong>. <a target='_blank' href='%2$s'>Preview $singular</a>", 'remote-notifications'),
+			// translators: Publish box date format, see http://php.net/date
+				date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink($post_ID) ) ),
+			10 => sprintf( __( "$singular draft updated. <a target='_blank' href='%s'>Preview $singular</a>", 'remote-notifications'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+		);
+
+		return $messages;
+	}
+
+	/**
 	 * Register the "Channels" taxonomy
 	 *
 	 * @since 1.0.0
@@ -298,17 +381,17 @@ class Remote_Notifications {
 	public function register_channel() {
 
 		$labels = array(
-			'name'              => _x( 'Channels', 'taxonomy general name' ),
-			'singular_name'     => _x( 'Channel', 'taxonomy singular name' ),
-			'search_items'      => __( 'Search Channels' ),
-			'all_items'         => __( 'All Channels' ),
-			'parent_item'       => __( 'Parent Channel' ),
-			'parent_item_colon' => __( 'Parent Channel:' ),
-			'edit_item'         => __( 'Edit Channel' ),
-			'update_item'       => __( 'Update Channel' ),
-			'add_new_item'      => __( 'Add New Channel' ),
-			'new_item_name'     => __( 'New Channel Name' ),
-			'menu_name'         => __( 'Channels' ),
+			'name'              => _x( 'Channels', 'taxonomy general name', 'remote-notifications' ),
+			'singular_name'     => _x( 'Channel', 'taxonomy singular name', 'remote-notifications' ),
+			'search_items'      => __( 'Search Channels', 'remote-notifications' ),
+			'all_items'         => __( 'All Channels', 'remote-notifications' ),
+			'parent_item'       => __( 'Parent Channel', 'remote-notifications' ),
+			'parent_item_colon' => __( 'Parent Channel:', 'remote-notifications' ),
+			'edit_item'         => __( 'Edit Channel', 'remote-notifications' ),
+			'update_item'       => __( 'Update Channel', 'remote-notifications' ),
+			'add_new_item'      => __( 'Add New Channel', 'remote-notifications' ),
+			'new_item_name'     => __( 'New Channel Name', 'remote-notifications' ),
+			'menu_name'         => __( 'Channels', 'remote-notifications' ),
 		);
 
 		$args = array(
@@ -335,17 +418,17 @@ class Remote_Notifications {
 	public function register_post_type() {
 
 		$labels = array(
-			'name'              => _x( 'Post Types Limitation', 'taxonomy general name' ),
-			'singular_name'     => _x( 'Post Type', 'taxonomy singular name' ),
-			'search_items'      => __( 'Search Post Types' ),
-			'all_items'         => __( 'All Post Types' ),
-			'parent_item'       => __( 'Parent Post Type' ),
-			'parent_item_colon' => __( 'Parent Post Type:' ),
-			'edit_item'         => __( 'Edit Post Type' ),
-			'update_item'       => __( 'Update Post Type' ),
-			'add_new_item'      => __( 'Add New Post Type' ),
-			'new_item_name'     => __( 'New Post Type Name' ),
-			'menu_name'         => __( 'Post Types' ),
+			'name'              => _x( 'Post Types Limitation', 'taxonomy general name', 'remote-notifications' ),
+			'singular_name'     => _x( 'Post Type', 'taxonomy singular name', 'remote-notifications' ),
+			'search_items'      => __( 'Search Post Types', 'remote-notifications' ),
+			'all_items'         => __( 'All Post Types', 'remote-notifications' ),
+			'parent_item'       => __( 'Parent Post Type', 'remote-notifications' ),
+			'parent_item_colon' => __( 'Parent Post Type:', 'remote-notifications' ),
+			'edit_item'         => __( 'Edit Post Type', 'remote-notifications' ),
+			'update_item'       => __( 'Update Post Type', 'remote-notifications' ),
+			'add_new_item'      => __( 'Add New Post Type', 'remote-notifications' ),
+			'new_item_name'     => __( 'New Post Type Name', 'remote-notifications' ),
+			'menu_name'         => __( 'Post Types', 'remote-notifications' ),
 		);
 
 		$args = array(
