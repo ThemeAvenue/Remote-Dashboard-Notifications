@@ -67,7 +67,7 @@ class Remote_Notifications {
 		add_action( 'template_redirect', array( $this, 'endpoint' ) );
 
 		// Register custom post types
-		$notifications = new TAV_Custom_Post_Type( 'Notification' );
+		$notifications = new TAV_Custom_Post_Type( 'Notification', array('menu_icon' => 'dashicons-format-chat' ) );
 
 	}
 
