@@ -1,0 +1,302 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2014-02-27 13:23+0700\n"
+"PO-Revision-Date: 2014-02-27 13:23+0700\n"
+"Last-Translator: Julien Liabeuf <julien@liabeuf.fr>\n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.4\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;__ngettext:1,2;_n:1,2;__ngettext_noop:1,2;"
+"_n_noop:1,2;_c,_nc:4c,1,2;_x:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;_ex:1,2c;"
+"esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: ..\n"
+
+#: ../admin/class-remote-notifications-admin.php:133
+msgid "Channel ID"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:142
+msgid "Channel Key"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:156
+msgid "Settings"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:177
+#: ../admin/class-remote-notifications-admin.php:178
+msgid "Notice Style"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:180
+msgid "WordPress Style"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:181
+msgid "Updated"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:182
+msgid "Error"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:184
+msgid "Custom Style"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:185
+msgid "Success"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:186
+msgid "Info"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:187
+msgid "Warning"
+msgstr ""
+
+#: ../admin/class-remote-notifications-admin.php:188
+msgid "Danger"
+msgstr ""
+
+#: ../includes/class-remote-notification-client.php:210
+msgid "Dismiss notification"
+msgstr ""
+
+#: ../includes/class-remote-notification-client.php:212
+msgid "Dismiss"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:312
+msgctxt "post type general name"
+msgid "Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:313
+msgctxt "post type singular name"
+msgid "Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:314
+#: ../public/includes/class-custom-post-type.php:88
+msgid "Add New"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:315
+msgid "Add New Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:316
+msgid "Edit Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:317
+msgid "New Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:318
+msgid "All Notifications"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:319
+msgid "View Notification"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:320
+msgid "Search Notifications"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:321
+msgid "No Notification found"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:322
+msgid "No Notification found in Trash"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:325
+msgid "Notifications"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:359
+#: ../public/includes/class-custom-post-type.php:143
+msgid "Custom field updated."
+msgstr ""
+
+#: ../public/class-remote-notifications.php:360
+#: ../public/includes/class-custom-post-type.php:144
+msgid "Custom field deleted."
+msgstr ""
+
+#: ../public/class-remote-notifications.php:369
+#: ../public/includes/class-custom-post-type.php:153
+msgid "M j, Y @ G:i"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:384
+msgctxt "taxonomy general name"
+msgid "Channels"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:385
+msgctxt "taxonomy singular name"
+msgid "Channel"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:386
+msgid "Search Channels"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:387
+msgid "All Channels"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:388
+msgid "Parent Channel"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:389
+msgid "Parent Channel:"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:390
+msgid "Edit Channel"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:391
+msgid "Update Channel"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:392
+msgid "Add New Channel"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:393
+msgid "New Channel Name"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:394
+msgid "Channels"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:421
+msgctxt "taxonomy general name"
+msgid "Post Types Limitation"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:422
+msgctxt "taxonomy singular name"
+msgid "Post Type"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:423
+msgid "Search Post Types"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:424
+msgid "All Post Types"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:425
+msgid "Parent Post Type"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:426
+msgid "Parent Post Type:"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:427
+msgid "Edit Post Type"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:428
+msgid "Update Post Type"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:429
+msgid "Add New Post Type"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:430
+msgid "New Post Type Name"
+msgstr ""
+
+#: ../public/class-remote-notifications.php:431
+msgid "Post Types"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:89
+#, php-format
+msgid "Add New %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:90
+#, php-format
+msgid "Edit %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:91
+#, php-format
+msgid "New %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:92
+#, php-format
+msgid "All %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:93
+#, php-format
+msgid "View %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:94
+#, php-format
+msgid "Search %s"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:95
+#, php-format
+msgid "No %s found"
+msgstr ""
+
+#: ../public/includes/class-custom-post-type.php:96
+#, php-format
+msgid "No %s found in Trash"
+msgstr ""
+
+#: ../public/views/archive-notification.php:20
+msgid "Unable to find channel information."
+msgstr ""
+
+#: ../public/views/archive-notification.php:33
+msgid "The payload was not properly encoded in base64."
+msgstr ""
+
+#: ../public/views/archive-notification.php:46
+msgid "The payload is not in a correct JSON format."
+msgstr ""
+
+#: ../public/views/archive-notification.php:54
+msgid "All required variable were not provided."
+msgstr ""
+
+#: ../public/views/archive-notification.php:72
+msgid "No channels."
+msgstr ""
+
+#: ../public/views/archive-notification.php:82
+msgid "Key hasn't been set for this channel."
+msgstr ""
+
+#: ../public/views/archive-notification.php:91
+msgid "The key you provided for this channel is incorrect."
+msgstr ""
