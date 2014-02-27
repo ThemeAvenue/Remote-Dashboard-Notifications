@@ -202,9 +202,9 @@ class TAV_Remote_Notification_Client {
 		$url = wp_nonce_url(  add_query_arg( array( 'notification' => $content->slug ), get_current_screen()->parent_file ), 'rn-dismiss', 'rn' ); ?>
 
 		<div class="<?php echo $class; ?>">
-			<?php if( 'default' != $style ): ?><a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notificatin' ); ?>">&times;</a><?php endif; ?>
+			<?php if( 'default' != $style ): ?><a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
 			<p><?php echo html_entity_decode( $content->message ); ?></p>
-			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notification' ); ?></a></p><?php endif; ?>
+			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss notification', 'remote-notifications' ); ?></a></p><?php endif; ?>
 		</div>
 		<?php
 
