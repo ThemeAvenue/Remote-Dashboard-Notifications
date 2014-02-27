@@ -204,12 +204,27 @@ class TAV_Remote_Notification_Client {
 		 * @var (string) URL
 		 * @todo get a more accurate URL of the current page
 		 */
-		$url = wp_nonce_url(  add_query_arg( array( 'notification' => $content->slug ), get_current_screen()->parent_file ), 'rn-dismiss', 'rn' ); ?>
+		$args  = array();
+		$nonce = wp_create_nonce( 'rn-dismiss' );
+		$slug  = $content->slug;
+
+		array_push( $args, "rn=$nonce" );
+		array_push( $args, "notification=$slug" );
+
+		foreach( $_GET as $key => $value ) {
+
+			array_push( $args, "$key=$value" );
+
+		}
+
+		$args = implode( '&', $args );
+		$url = "?$args";
+		?>
 
 		<div class="<?php echo $class; ?>">
-			<?php if( !in_array( $style, array( 'updated', 'error' ) ) ): ?><a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
+			<?php if( !in_array( $style, array( 'updated', 'error' ) ) ): ?><a href="<?php echo $url; ?>" id="rn-dismiss" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
 			<p><?php echo html_entity_decode( $content->message ); ?></p>
-			<?php if( in_array( $style, array( 'updated', 'error' ) ) ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notifications' ); ?></a></p><?php endif; ?>
+			<?php if( in_array( $style, array( 'updated', 'error' ) ) ): ?><p><a href="<?php echo $url; ?>" id="rn-dismiss" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notifications' ); ?></a></p><?php endif; ?>
 		</div>
 		<?php
 
@@ -245,6 +260,25 @@ class TAV_Remote_Notification_Client {
 		/* Update option */
 		update_option( '_rn_dismissed', $dismissed );
 
+		/* Get redirect URL */
+		$args = array();
+
+		/* Get URL args */
+		foreach( $_GET as $key => $value ) {
+
+			if( in_array( $key, array( 'rn', 'notification' ) ) )
+				continue;
+
+			array_push( $args, "$key=$value" );
+
+		}
+
+		$args = implode( '&', $args );
+		$url = "?$args";
+
+		/* Redirect */
+		wp_redirect( $url );
+
 	}
 
 	/**
@@ -259,5 +293,39 @@ class TAV_Remote_Notification_Client {
 		<style type="text/css">div.rn-alert{padding:15px;padding-right:35px;margin-bottom:20px;border:1px solid transparent;-webkit-box-shadow:none;box-shadow:none}div.rn-alert p:empty{display:none}div.rn-alert ul,div.rn-alert ul li,div.rn-alert ol,div.rn-alert ol li{list-style:inherit !important}div.rn-alert ul,div.rn-alert ol{padding-left:30px}div.rn-alert hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0;margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}div.rn-alert h1,h2,h3,h4,h5,h6{margin-top:0;color:inherit}div.rn-alert a{font-weight:700}div.rn-alert a:hover{text-decoration:underline}div.rn-alert>p{margin:0;padding:0;line-height:1}div.rn-alert>p,div.rn-alert>ul{margin-bottom:0}div.rn-alert>p+p{margin-top:5px}div.rn-alert .rn-dismiss-btn{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;top:-2px;right:-21px;padding:0;cursor:pointer;background:0;border:0;-webkit-appearance:none;float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0 #fff;opacity:.2;filter:alpha(opacity=20);text-decoration:none}div.rn-alert-success{background-color:#dff0d8;border-color:#d6e9c6;color:#3c763d}div.rn-alert-success hr{border-top-color:#c9e2b3}div.rn-alert-success a{color:#2b542c}div.rn-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#31708f}div.rn-alert-info hr{border-top-color:#a6e1ec}div.rn-alert-info a{color:#245269}div.rn-alert-warning{background-color:#fcf8e3;border-color:#faebcc;color:#8a6d3b}div.rn-alert-warning hr{border-top-color:#f7e1b5}div.rn-alert-warning a{color:#66512c}div.rn-alert-danger{background-color:#f2dede;border-color:#ebccd1;color:#a94442}div.rn-alert-danger hr{border-top-color:#e4b9c0}div.rn-alert-danger a{color:#843534}</style>
 
 	<?php }
+
+	/**
+	 * Dismiss notice using Ajax
+	 *
+	 * This function is NOT used. Testing only.
+	 */
+	public function script() {
+
+		$url = admin_url();
+		?>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			var prout = 'prout';
+
+			$('#rn-dismiss').on('click', function(event) {
+				event.preventDefault();
+				$.ajax({
+					type: "GET",
+					url: <?php echo $url; ?>,
+					data: prout
+				});
+				console.log('clicked');
+			});
+
+			return false;
+
+		});
+		</script>
+
+		<?php
+
+	}
 
 }
