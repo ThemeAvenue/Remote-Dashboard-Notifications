@@ -5,7 +5,7 @@ Developers, have you ever wanted to ask something to your users? Tried to get so
 
 Remote Dashboard Notifications (RDN) is a plugin made for themes and plugins developers who want to send short notifications to their users. This plugin will allow a theme / plugin author to display a notice in the client's admin dashboard using the WordPress admin notices.
 
-<img src="http://i.imgur.com/lfj15SY.png" width="650" />
+<img src="http://i.imgur.com/hhMz2J7.jpg" width="700" />
 
 The plugin works on a server / client basis. The product author uses a WordPress install as the server (where the plugin has to be installed), and the user's WordPress site will be the client.
 
