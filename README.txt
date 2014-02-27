@@ -38,7 +38,7 @@ It is really easy to integrate this feature in a plugin or theme. Only two steps
 Place this into `functions.php`.
 
     require( 'class-remote-notification-client.php' );
-    $notification = new TAV_Remote_Notification_Client( 35, 'f76714a0a97d1186', 'http://server.url/?post_type=notification' );
+    $notification = new TAV_Remote_Notification_Client( 35, 'f76714a0a97d1186', 'http://server.url?post_type=notification' );
 
 == Frequently Asked Questions ==
 
