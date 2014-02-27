@@ -177,11 +177,16 @@ class Remote_Notifications_Admin {
 		<label for="rn_style" class="screen-reader-text"><?php _e( 'Notice Style', 'remote-notifications' ); ?></label>
 		<p><strong><?php _e( 'Notice Style', 'remote-notification' ); ?></strong></p>
 		<select id="rn_style" name="rn_settings[style]">
-			<option value="default" <?php if( 'default' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Default', 'remote-notifications' ); ?></option>
-			<option value="success" <?php if( 'success' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Success', 'remote-notifications' ); ?></option>
-			<option value="info" <?php if( 'info' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Info', 'remote-notifications' ); ?></option>
-			<option value="warning" <?php if( 'warning' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Warning', 'remote-notifications' ); ?></option>
-			<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notifications' ); ?></option>
+			<optgroup label="<?php _e( 'WordPress Style', 'remote-notifications' ); ?>">
+				<option value="updated" <?php if( 'updated' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Updated', 'remote-notifications' ); ?></option>
+				<option value="error" <?php if( 'error' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Error', 'remote-notifications' ); ?></option>
+			</optgroup>
+			<optgroup label="<?php _e( 'Custom Style', 'remote-notifications' ); ?>">
+				<option value="success" <?php if( 'success' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Success', 'remote-notifications' ); ?></option>
+				<option value="info" <?php if( 'info' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Info', 'remote-notifications' ); ?></option>
+				<option value="warning" <?php if( 'warning' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Warning', 'remote-notifications' ); ?></option>
+				<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notifications' ); ?></option>
+			</optgroup>
 		</select>
 
 	<?php }
