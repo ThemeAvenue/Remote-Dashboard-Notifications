@@ -79,7 +79,7 @@ if( !taxonomy_exists( 'rn-channel' ) ) {
  */
 if( false === $key ) {
 
-	_e( 'This channel has no key set.', 'remote-notifications' );
+	_e( 'Key hasn\'t been set for this channel.', 'remote-notifications' );
 	exit;
 
 } else {
