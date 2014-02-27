@@ -250,12 +250,7 @@ class Remote_Notifications {
 		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
 		$loaded = load_textdomain( $domain, RDN_PATH . 'languages/' . $domain . '-' . $locale . '.mo' );
-
-		if( !$loaded )
-			echo 'merde';
-
-		// load_plugin_textdomain( $domain, false, RDN_PATH . 'languages/' );
-
+		
 	}
 
 	/**
