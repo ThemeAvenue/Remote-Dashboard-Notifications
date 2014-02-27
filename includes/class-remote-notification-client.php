@@ -204,7 +204,7 @@ class TAV_Remote_Notification_Client {
 		<div class="<?php echo $class; ?>">
 			<?php if( 'default' != $style ): ?><a href="<?php echo $url; ?>" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
 			<p><?php echo html_entity_decode( $content->message ); ?></p>
-			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss notification', 'remote-notifications' ); ?></a></p><?php endif; ?>
+			<?php if( 'default' == $style ): ?><p><a href="<?php echo $url; ?>" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notifications' ); ?></a></p><?php endif; ?>
 		</div>
 		<?php
 
