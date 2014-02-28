@@ -30,7 +30,7 @@ The following has to be understood before you can integrate this feature in your
 
 ### Integration steps
 
-It is really easy to integrate this feature in a plugin or theme. Only two steps are required:
+It is really easy to integrate this feature in a plugin or theme. Only four steps are required:
 
 1. Copy `includes/class-remote-notification-client.php` into the theme / plugin directory
 2. Create a new channel on the server
