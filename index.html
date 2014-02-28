@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Remote Dashboard Notifications for WordPress : This plugin allows to push any notification to the WordPress dashboard" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Remote Dashboard Notifications for WordPress</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/ThemeAvenue/Remote-Dashboard-Notifications">View on GitHub</a>
+
+          <h1 id="project_title">Remote Dashboard Notifications for WordPress</h1>
+          <h2 id="project_tagline">This plugin allows to push any notification to the WordPress dashboard</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/ThemeAvenue/Remote-Dashboard-Notifications/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/ThemeAvenue/Remote-Dashboard-Notifications/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="remote-dashboard-notifications" class="anchor" href="#remote-dashboard-notifications"><span class="octicon octicon-link"></span></a>Remote Dashboard Notifications</h1>
+
+<p>Developers, have you ever wanted to ask something to your users? Tried to get some feedback about your product? Want them to leave a comment on your site? This plugin will help you do that. </p>
+
+<p>Remote Dashboard Notifications (RDN) is a plugin made for themes and plugins developers who want to send short notifications to their users. This plugin will allow a theme / plugin author to display a notice in the client's admin dashboard using the WordPress admin notices.</p>
+
+<p><img src="http://i.imgur.com/hhMz2J7.jpg" width="700"></p>
+
+<p>The plugin works on a server / client basis. The product author uses a WordPress install as the server (where the plugin has to be installed), and the user's WordPress site will be the client.</p>
+
+<h2>
+<a name="how-it-works" class="anchor" href="#how-it-works"><span class="octicon octicon-link"></span></a>How it works</h2>
+
+<p>The plugin is meant to manage messages for multiple products. We call <em>channels</em> the different types of notifications. For instance, if I have 2 products, Product A and Product B, I will create 2 channels in the server: Channel A and Channel B.</p>
+
+<p>Once a channel is created, the plugin will create an ID and a key used to authenticate the client requests. When integrating RDN to a theme or plugin, the client class will be instanciated with the desired channel ID and key.</p>
+
+<p>When a client site will will check for new notifications, it will make an HTTP request (using WordPress HTTP API) to the server. If the requested channel exists and the key is valid, the server will return the latest notification (if any) in a JSON encoded array.</p>
+
+<p>The client site will then cache this response and display it as an admin notice in the WordPress site dashboard until the user dismisses it.</p>
+
+<h2>
+<a name="integration-in-a-theme-or-plugin" class="anchor" href="#integration-in-a-theme-or-plugin"><span class="octicon octicon-link"></span></a>Integration in a theme or plugin</h2>
+
+<p>It is really easy to integrate this feature in a plugin or theme. Only two steps are required:</p>
+
+<ol>
+<li>Copy <code>includes/class-remote-notification-client.php</code> into the theme / plugin directory</li>
+<li>Instanciate the class with the server's URL, a channel ID and key</li>
+</ol><h3>
+<a name="integration-examples" class="anchor" href="#integration-examples"><span class="octicon octicon-link"></span></a>Integration examples</h3>
+
+<h4>
+<a name="theme" class="anchor" href="#theme"><span class="octicon octicon-link"></span></a>Theme</h4>
+
+<p>Place this into <code>functions.php</code>.</p>
+
+<pre><code>require( 'class-remote-notification-client.php' );
+$notification = new TAV_Remote_Notification_Client( 35, 'f76714a0a97d1186', 'http://server.url?post_type=notification' );
+</code></pre>
+
+<h2>
+<a name="privacy" class="anchor" href="#privacy"><span class="octicon octicon-link"></span></a>Privacy</h2>
+
+<p>The plugin does not collect any information about the client site. The server plugin is completely passive and its only job is to return messages to the requestor.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Remote Dashboard Notifications for WordPress maintained by <a href="https://github.com/ThemeAvenue">ThemeAvenue</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-15485830-53");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
