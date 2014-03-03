@@ -14,6 +14,7 @@ if( stristr( $user_agent, 'WordPress' ) == false ) {
 	
 	header('HTTP/1.0 403 Forbidden');
 	_e( 'Sorry, you are not allowed to access this page', 'remote-notifications' );
+	exit;
 
 }
 
