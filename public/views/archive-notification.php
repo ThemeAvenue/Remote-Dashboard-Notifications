@@ -6,11 +6,15 @@ $user_agent = $_SERVER['HTTP_USER_AGENT'];
 
 /**
  * Validate user agent.
- * if the request is not from WordPress (admin) return false
+ * 
+ * If the request is not from WordPress we return a 403 header.
+ * This will also avoid search engines to index the page.
  */
-if ( stristr( $user_agent, 'WordPress' ) == false ) {
-	// _e( 'Sorry, this page is not publicly accessible.', 'remote-notifications' );
-	// exit;
+if( stristr( $user_agent, 'WordPress' ) == false ) {
+	
+	header('HTTP/1.0 403 Forbidden');
+	_e( 'Sorry, you are not allowed to access this page', 'remote-notifications' );
+
 }
 
 /**
