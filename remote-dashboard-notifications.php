@@ -68,6 +68,6 @@ if ( is_admin() ) {
 	require_once( RDN_PATH . 'includes/class-remote-notification-client.php' );
 
 	if( class_exists( 'TAV_Remote_Notification_Client' ) )
-		$rdn = new TAV_Remote_Notification_Client( 116, '88d07387308e6b7f', 'http://support.themeavenue.net?post_type=notification' );
+		$rdn = new TAV_Remote_Notification_Client( 3, '0a075eda8c3be0ed', 'http://api.themeavenue.net?post_type=notification' );
 
 }
