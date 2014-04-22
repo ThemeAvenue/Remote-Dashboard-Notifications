@@ -14,7 +14,8 @@
  * @author    ThemeAvenue <web@themeavenue.net>
  * @license   GPL-2.0+
  * @link      http://themeavenue.net
- * @link 	  http://themeavenue.net/plugin-url
+ * @link      http://wordpress.org/plugins/remote-dashboard-notifications/
+ * @link 	  https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
  * @copyright 2014 ThemeAvenue
  */
 
@@ -32,7 +33,7 @@ class TAV_Remote_Notification_Client {
 	 *
 	 * @var      string
 	 */
-	protected static $version = '0.1.0';
+	protected static $version = '0.1.1';
 
 	public function __construct( $channel_id = false, $channel_key = false, $server = false ) {
 
@@ -104,8 +105,16 @@ class TAV_Remote_Notification_Client {
 					/**
 					 * Check if the payload is in a usable JSON format
 					 */
-					if( json_last_error() != JSON_ERROR_NONE ) {
-						return false;
+					if( version_compare( phpversion(), '5.3.0', '>=' ) ) {
+
+						if( ! ( json_last_error() == JSON_ERROR_NONE ) )
+							return false;
+
+					} else {
+
+						if( $content == NULL )
+							return false;
+
 					}
 
 					set_transient( 'rn_last_notification', $content, $this->cache*60*60 );
