@@ -22,7 +22,7 @@ if( stristr( $user_agent, 'WordPress' ) == false ) {
  * Check if channel info is available
  */
 if( !isset( $_GET['payload'] ) ) {
-	_e( 'Unable to find channel information.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'Unable to find channel information.', 'remote-notifications' ) ) );
 	exit;
 }
 
@@ -35,7 +35,7 @@ $payload = base64_decode( $_GET['payload'] );
  * Check if payload have been decoded
  */
 if( !$payload ) {
-	_e( 'The payload was not properly encoded in base64.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'The payload was not properly encoded in base64.', 'remote-notifications' ) ) );
 	exit;
 }
 
@@ -48,7 +48,7 @@ $payload = json_decode( $payload );
  * Check if the payload is in a usable JSON format
  */
 if( json_last_error() != JSON_ERROR_NONE ) {
-	_e( 'The payload is not in a correct JSON format.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'The payload is not in a correct JSON format.', 'remote-notifications' ) ) );
 	exit;
 }
 
@@ -56,7 +56,7 @@ if( json_last_error() != JSON_ERROR_NONE ) {
  * Check if all variables are provided
  */
 if( !isset( $payload->channel ) || !isset( $payload->key ) ) {
-	_e( 'All required variable were not provided.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'All required variable were not provided.', 'remote-notifications' ) ) );
 	exit;
 }
 
@@ -74,7 +74,7 @@ $key 		 = get_option( "_rn_channel_key_$channel_id", false );
  */
 if( !taxonomy_exists( 'rn-channel' ) ) {
 
-	_e( 'No channels.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'No channels.', 'remote-notifications' ) ) );
 	exit;
 
 }
@@ -84,7 +84,7 @@ if( !taxonomy_exists( 'rn-channel' ) ) {
  */
 if( false === $key ) {
 
-	_e( 'Key hasn\'t been set for this channel.', 'remote-notifications' );
+	echo json_encode( array( 'error' => __( 'Key hasn\'t been set for this channel.', 'remote-notifications' ) ) );
 	exit;
 
 } else {
@@ -93,7 +93,7 @@ if( false === $key ) {
 	 * Check the validity of the key
 	 */
 	if( $key !== $channel_key ) {
-		_e( 'The key you provided for this channel is incorrect.', 'remote-notifications' );
+		echo json_encode( array( 'error' => __( 'The key you provided for this channel is incorrect.', 'remote-notifications' ) ) );
 		exit;
 	}
 }
@@ -154,9 +154,11 @@ if( isset( $notification->post ) ) {
 	}
 
 	echo json_encode( $alert );
+	exit;
 
 } else {
 
-	echo 'nothing';
+	echo json_encode( array( 'error' => __( 'nothing', 'remote-notifications' ) ) );
+	exit;
 
 }
