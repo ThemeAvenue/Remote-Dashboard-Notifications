@@ -33,19 +33,21 @@ class TAV_Remote_Notification_Client {
 	 *
 	 * @var      string
 	 */
-	protected static $version = '0.1.1';
+	protected static $version = '0.1.2';
 
-	public function __construct( $channel_id = false, $channel_key = false, $server = false ) {
+	public function __construct( $channel_id = false, $channel_key = false, $server = false, $debug = false ) {
 
 		/* Don't continue during Ajax process */
 		if( !is_admin() || defined( 'DOING_AJAX' ) && DOING_AJAX )
 			return;
 
-		$this->id  	  = intval( $channel_id );
-		$this->key 	  = sanitize_key( $channel_key );
+		$this->id     = intval( $channel_id );
+		$this->key    = sanitize_key( $channel_key );
 		$this->server = esc_url( $server );
 		$this->notice = false;
 		$this->cache  = apply_filters( 'rn_notice_caching_time', 6 );
+		$this->debug  = $debug;
+		$this->error  = null;
 
 		/* The plugin can't work without those 2 parameters */
 		if( false === ( $this->id || $this->key || $this->server ) )
@@ -69,20 +71,29 @@ class TAV_Remote_Notification_Client {
 	 */
 	public function request_server() {
 
+		/* Current channel ID */
+		$channel_id = $this->id;
+
+		/* Current channel key */
+		$channel_key = $this->key;
+
+		/* Generate a unique identifyer used for the transient */
+		$uniqid = $channel_id . substr( $channel_key, 0, 5 );
+
+		/* Prepare the payload to send to server */
+		$payload = base64_encode( json_encode( array( 'channel' => $channel_id, 'key' => $channel_key ) ) );
+
+		/* Get the endpoint URL ready */
+		$url = add_query_arg( array( 'payload' => $payload ), $this->server );
+
 		/* Content is false at first */
-		$content = get_transient( 'rn_last_notification' );
+		$content = get_transient( "rn_last_notification_$uniqid" );
 
 		/* Set the request response to null */
 		$request = null;
 
 		/* If no notice is present in DB we query the server */
 		if( false === $content || defined( 'RDN_DEV' ) && RDN_DEV ) {
-
-			/* Prepare the payload to send to server */
-			$payload = base64_encode( json_encode( array( 'channel' => $this->id, 'key' => $this->key ) ) );
-
-			/* Get the endpoint URL ready */
-			$url = add_query_arg( array( 'payload' => $payload ), $this->server );
 
 			/* Query the server */
 			$request = wp_remote_get( $url, array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
@@ -117,7 +128,7 @@ class TAV_Remote_Notification_Client {
 
 					}
 
-					set_transient( 'rn_last_notification', $content, $this->cache*60*60 );
+					set_transient( "rn_last_notification_$uniqid", $content, $this->cache*60*60 );
 
 				}			
 
@@ -130,8 +141,23 @@ class TAV_Remote_Notification_Client {
 		 */
 		if( is_object( $content ) ) {
 
-			if( isset( $content->error ) )
+			if( isset( $content->error ) ) {
+
+				/* Display debug info in the admin footer */
+				if( true === $this->debug ) {
+
+					/* Save the error message */
+					$this->error = $content->error;
+
+					/* Display it commented in the footer */
+					add_action( 'admin_footer', array( $this, 'debug_info' ) );
+
+				}
+
+				/* Stop */
 				return;
+
+			}
 
 			$this->notice = $content;
 
@@ -334,6 +360,21 @@ class TAV_Remote_Notification_Client {
 		</script>
 
 		<?php
+
+	}
+
+	/**
+	 * Debug info.
+	 *
+	 * Display an error message commented in the admin footer.
+	 *
+	 * @since  0.1.2
+	 */
+	public function debug_info() {
+
+		$error = $this->error;
+
+		echo "<!-- RDN Debug Info: $error -->";
 
 	}
 
