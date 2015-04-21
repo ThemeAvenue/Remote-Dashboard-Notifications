@@ -35,7 +35,7 @@ define( 'RDN_PATH', plugin_dir_path( __FILE__ ) );
  * Public-Facing Functionality
  *----------------------------------------------------------------------------*/
 
-require_once( plugin_dir_path( __FILE__ ) . 'public/class-remote-notifications.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/class-rdn.php' );
 
 /*
  * Register hooks that are fired when the plugin is activated or deactivated.
@@ -58,7 +58,7 @@ add_action( 'plugins_loaded', array( 'Remote_Notifications', 'get_instance' ) );
  */
 if ( is_admin() ) {
 
-	require_once( RDN_PATH . 'admin/class-remote-notifications-admin.php' );
+	require_once( RDN_PATH . 'includes/class-rdn-admin.php' );
 	add_action( 'plugins_loaded', array( 'Remote_Notifications_Admin', 'get_instance' ) );
 
 	/**
