@@ -1,6 +1,6 @@
 <?php
 /**
- * Remote Dashobard Notifications.
+ * Remote Dashboard Notifications.
  *
  * This plugin allows to push any notification to the WordPress dashboard.
  * This allows easy communication with the clients.
@@ -11,7 +11,6 @@
  * @link      http://themeavenue.net
  * @copyright 2013 ThemeAvenue
  *
- * @wordpress-plugin
  * Plugin Name:       Remote Dashboard Notifications
  * Plugin URI:        https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
  * Description:       Remote Dashboard Notifications is made for themes and plugins developers who want to send short notifications to their users.
@@ -46,7 +45,7 @@ register_activation_hook( __FILE__, array( 'Remote_Notifications', 'activate' ) 
 register_deactivation_hook( __FILE__, array( 'Remote_Notifications', 'deactivate' ) );
 
 /**
- * Instanciate public class
+ * Instantiate public class
  */
 add_action( 'plugins_loaded', array( 'Remote_Notifications', 'get_instance' ) );
 
@@ -63,11 +62,14 @@ if ( is_admin() ) {
 	add_action( 'plugins_loaded', array( 'Remote_Notifications_Admin', 'get_instance' ) );
 
 	/**
-	 * Instanciate the client class
+	 * Instantiate the client class
 	 */
-	require_once( RDN_PATH . 'includes/class-remote-notification-client.php' );
+	if ( ! class_exists( 'TAV_Remote_Notification_Client' ) ) {
+		require_once( RDN_PATH . 'includes/class-remote-notification-client.php' );
+	}
 
-	if( class_exists( 'TAV_Remote_Notification_Client' ) )
+	if( class_exists( 'TAV_Remote_Notification_Client' ) ) {
 		$rdn = new TAV_Remote_Notification_Client( 3, '0a075eda8c3be0ed', 'http://api.themeavenue.net?post_type=notification' );
+	}
 
 }
