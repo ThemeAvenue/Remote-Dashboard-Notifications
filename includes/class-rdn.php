@@ -1,6 +1,6 @@
 <?php
 /**
- * Remote Dashobard Notifications.
+ * Remote Dashboard Notifications.
  *
  * @package   Remote Dashobard Notifications
  * @author    ThemeAvenue <web@themeavenue.net>
