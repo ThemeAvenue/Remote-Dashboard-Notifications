@@ -9,13 +9,6 @@
  * @copyright 2013 ThemeAvenue
  */
 
-/**
- * Plugin class. This class should ideally be used to work with the
- * public-facing side of the WordPress site.
- *
- * @package Remote Dashobard Notifications
- * @author  Julien Liabeuf <julien@liabeuf.fr>
- */
 class Remote_Notifications {
 
 	/**
@@ -25,11 +18,9 @@ class Remote_Notifications {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '1.0.0';
+	const VERSION = '1.1.0';
 
 	/**
-	 * @TODO - Rename "plugin-name" to the name your your plugin
-	 *
 	 * Unique identifier for your plugin.
 	 *
 	 *
@@ -282,7 +273,7 @@ class Remote_Notifications {
 
 		if( is_archive() && isset( $wp_query->query_vars['post_type'] ) && 'notification' == $wp_query->query_vars['post_type'] ) {
 
-			$single = RDN_PATH . '/public/views/archive-notification.php';
+			$single = RDN_PATH . '/includes/archive-notification.php';
 
 			if( file_exists( $single ) ) {
 
