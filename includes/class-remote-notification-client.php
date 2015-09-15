@@ -33,7 +33,7 @@ class TAV_Remote_Notification_Client {
 	 *
 	 * @var      string
 	 */
-	protected static $version = '0.1.2';
+	protected static $version = '0.1.3';
 
 	public function __construct( $channel_id = false, $channel_key = false, $server = false, $debug = false ) {
 
