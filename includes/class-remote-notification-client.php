@@ -205,11 +205,11 @@ class TAV_Remote_Notification_Client {
 			return new WP_Error( 'json_decode_error', __( 'Cannot decode the response content', 'remote-notifications' ) );
 		}
 
+		set_transient( "rn_last_notification_$this->notice_id", $body, $this->cache*60*60 );
+
 		if ( $this->is_notification_error( $body ) ) {
 			return new WP_Error( 'notification_error', $this->get_notification_error_message( $body ) );
 		}
-
-		set_transient( "rn_last_notification_$this->notice_id", $body, $this->cache*60*60 );
 
 		return $body;
 
@@ -284,6 +284,10 @@ class TAV_Remote_Notification_Client {
 	 * @return bool
 	 */
 	protected function is_notification_dismissed() {
+
+		if ( is_wp_error( $this->get_notice() ) || $this->is_notification_error( $this->get_notice() ) ) {
+			return false;
+		}
 
 		global $current_user;
 		
