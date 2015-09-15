@@ -72,7 +72,7 @@ class Remote_Notifications {
 	 *
 	 * @since    1.0.0
 	 *
-	 *@return    Plugin slug variable.
+	 * @return    string Plugin slug variable.
 	 */
 	public function get_plugin_slug() {
 		return $this->plugin_slug;
@@ -240,7 +240,7 @@ class Remote_Notifications {
 		$domain = $this->plugin_slug;
 		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
-		$loaded = load_textdomain( $domain, RDN_PATH . 'languages/' . $domain . '-' . $locale . '.mo' );
+		load_textdomain( $domain, RDN_PATH . 'languages/' . $domain . '-' . $locale . '.mo' );
 		
 	}
 
@@ -332,14 +332,18 @@ class Remote_Notifications {
 
 	/**
 	 * Custom updated messages
+	 *
+	 * @param array $messages Post types messages array
+	 *
+	 * @return array Messages array with our post type messages added
 	 */
 	function updated_messages( $messages ) {
 
 		global $post, $post_ID;
 
-		$singular = $this->cpt_name;
+		$singular = __( 'Notification', 'remote-notifications' );
 
-		$messages[$this->cpt_slug] = array(
+		$messages['notification'] = array(
 			0 => '', // Unused. Messages start at index 1.
 			1 => sprintf( __( "$singular updated. <a href='%s'>View $singular</a>", 'remote-notifications'), esc_url( get_permalink($post_ID) ) ),
 			2 => __( 'Custom field updated.', 'remote-notifications'),

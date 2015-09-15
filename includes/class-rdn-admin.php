@@ -84,10 +84,12 @@ class Remote_Notifications_Admin {
 	 * Associate a key to the term created
 	 *
 	 * This function will save a key for each term
+	 *
+	 * @param int $term_id The taxonomy term ID
 	 */
-	public function create_channel_key( $term_id, $tt_id ) {
-    	
-    	/* Get a key */
+	public function create_channel_key( $term_id ) {
+
+		/* Get a key */
 		$key = $this->generate_key();
 
 		/* Save it in DB */
@@ -95,7 +97,7 @@ class Remote_Notifications_Admin {
 
 	}
 
-	public function delete_channel_key( $term_id, $tt_id ) {
+	public function delete_channel_key( $term_id ) {
 
 		/* Save it in DB */
 		delete_option( "_rn_channel_key_$term_id" );
@@ -198,10 +200,12 @@ class Remote_Notifications_Admin {
 	<?php }
 
 	/**
-	* When the post is saved, saves our custom data.
-	*
-	* @param int $post_id The ID of the post being saved.
-	*/
+	 * When the post is saved, saves our custom data.
+	 *
+	 * @param int $post_id The ID of the post being saved.
+	 *
+	 * @return int|bool Meta ID or false on failure
+	 */
 	public function save_settings( $post_id ) {
 
 		/*
@@ -210,29 +214,34 @@ class Remote_Notifications_Admin {
 		*/
 
 		// Check if our nonce is set.
-		if ( !isset( $_POST['rn_settings_nonce'] ) )
+		if ( ! isset( $_POST['rn_settings_nonce'] ) ) {
 			return $post_id;
+		}
 
 		$nonce = $_POST['rn_settings_nonce'];
 
 		// Verify that the nonce is valid.
-		if ( !wp_verify_nonce( $nonce, 'update_settings' ) )
+		if ( ! wp_verify_nonce( $nonce, 'update_settings' ) ) {
 			return $post_id;
+		}
 
 		// If this is an autosave, our form has not been submitted, so we don't want to do anything.
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) 
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return $post_id;
+		}
 
 		// Check the user's permissions.
 		if ( 'notification' == $_POST['post_type'] ) {
 
-			if ( ! current_user_can( 'edit_page', $post_id ) )
+			if ( ! current_user_can( 'edit_page', $post_id ) ) {
 				return $post_id;
+			}
 
 		} else {
 
-			if ( ! current_user_can( 'edit_post', $post_id ) )
+			if ( ! current_user_can( 'edit_post', $post_id ) ) {
 				return $post_id;
+			}
 		}
 
 		/* OK, its safe for us to save the data now. */
@@ -241,7 +250,7 @@ class Remote_Notifications_Admin {
 		$mydata = sanitize_text_field( $_POST['rn_settings'] );
 
 		// Update the meta field in the database.
-		update_post_meta( $post_id, '_rn_settings', $_POST['rn_settings'] );
+		return update_post_meta( $post_id, '_rn_settings', $mydata );
 
 	}
 	

@@ -69,8 +69,9 @@ class TAV_Remote_Notification_Client {
 	 *
 	 * The distant WordPress notification server is
 	 * queried using the WordPress HTTP API.
-	 * 
+	 *
 	 * @since 0.1.0
+	 * @return void
 	 */
 	public function request_server() {
 
@@ -123,13 +124,13 @@ class TAV_Remote_Notification_Client {
 					if ( version_compare( phpversion(), '5.3.0', '>=' ) ) {
 
 						if ( ! ( json_last_error() == JSON_ERROR_NONE ) ) {
-							return false;
+							return;
 						}
 
 					} else {
 
 						if ( $content == NULL ) {
-							return false;
+							return;
 						}
 
 					}
@@ -188,7 +189,7 @@ class TAV_Remote_Notification_Client {
 
 		} else {
 
-			return false;
+			return;
 
 		}
 
