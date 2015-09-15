@@ -179,7 +179,7 @@ class Remote_Notifications_Admin {
 		* from the database and use the value for the form.
 		*/
 		$value = get_post_meta( $post->ID, '_rn_settings', true );
-		$style = isset( $value['style'] ) ? $value['style'] : '';
+		$style = isset( $value['style'] ) ? esc_attr( $value['style'] ) : '';
 		?>
 
 		<label for="rn_style" class="screen-reader-text"><?php _e( 'Notice Style', 'remote-notifications' ); ?></label>
@@ -196,6 +196,15 @@ class Remote_Notifications_Admin {
 				<option value="danger" <?php if( 'danger' == $style ): ?>selected="selected"<?php endif; ?>><?php _e( 'Danger', 'remote-notifications' ); ?></option>
 			</optgroup>
 		</select>
+
+		<p><label for="rn_date_start"><strong><?php _e( 'Start Date', 'remote-notifications' ); ?></strong></label></p>
+		<input type="date" id="rn_date_start" name="rn_settings[date_start]" value="<?php echo isset( $value['date_start'] ) ? esc_attr( $value['date_start'] ) : ''; ?>">
+		<p class="description"><?php _e( 'Leave empty for no start date (will start immediately)', 'remote-notifications' ); ?></p>
+
+
+		<p><label for="rn_date_end"><strong><?php _e( 'End Date', 'remote-notifications' ); ?></strong></label></p>
+		<input type="date" id="rn_date_end" name="rn_settings[date_end]" value="<?php echo isset( $value['date_end'] ) ? esc_attr( $value['date_end'] ) : ''; ?>">
+		<p class="description"><?php _e( 'Leave empty for no end date (will never end)', 'remote-notifications' ); ?></p>
 
 	<?php }
 
@@ -247,7 +256,7 @@ class Remote_Notifications_Admin {
 		/* OK, its safe for us to save the data now. */
 
 		// Sanitize user input.
-		$mydata = sanitize_text_field( $_POST['rn_settings'] );
+		$mydata = array_map( 'sanitize_text_field', $_POST['rn_settings'] );
 
 		// Update the meta field in the database.
 		return update_post_meta( $post_id, '_rn_settings', $mydata );
