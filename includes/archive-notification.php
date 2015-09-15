@@ -132,8 +132,6 @@ if( isset( $notification->post ) ) {
 		'title'   => $notification->post->post_title,
 		'message' => htmlentities( $notification->post->post_content ),
 		'slug'    => $notification->post->post_name,
-		'starts'  => isset( $settings['date_start'] ) && ! empty( $settings['date_start'] ) ? esc_attr( $settings['date_start'] ) : '',
-		'ends'    => isset( $settings['date_end'] ) && ! empty( $settings['date_end'] ) ? esc_attr( $settings['date_end'] ) : '',
 		'type'    => array()
 	);
 
