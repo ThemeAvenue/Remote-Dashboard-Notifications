@@ -207,6 +207,9 @@ class TAV_Remote_Notification_Client {
 	 */
 	public function show_notice() {
 
+		/**
+		 * @var object $content
+		 */
 		$content = $this->notice;
 
 		/* If there is no content we abort */
@@ -229,6 +232,17 @@ class TAV_Remote_Notification_Client {
 				return;
 			}
 
+		}
+
+		$start = $content->starts;
+		$end   = $content->ends;
+
+		if ( ! empty( $start ) && strtotime( $start ) > time() ) {
+			return;
+		}
+
+		if ( ! empty( $end ) && strtotime( $end ) < time() ) {
+			return;
 		}
 
 		/* Prepare alert class */
