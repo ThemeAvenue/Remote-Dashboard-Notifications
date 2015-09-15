@@ -339,26 +339,43 @@ class Remote_Notifications {
 	 */
 	function updated_messages( $messages ) {
 
-		global $post, $post_ID;
+		global $post;
 
-		$singular = __( 'Notification', 'remote-notifications' );
+		$post_type        = get_post_type( $post );
+		$post_type_object = get_post_type_object( $post_type );
 
 		$messages['notification'] = array(
-			0 => '', // Unused. Messages start at index 1.
-			1 => sprintf( __( "$singular updated. <a href='%s'>View $singular</a>", 'remote-notifications'), esc_url( get_permalink($post_ID) ) ),
-			2 => __( 'Custom field updated.', 'remote-notifications'),
-			3 => __( 'Custom field deleted.', 'remote-notifications'),
-			4 => __( "$singular updated.", 'remote-notifications'),
+			0  => '', // Unused. Messages start at index 1.
+			1  => __( 'Notification updated.', 'remote-notifications' ),
+			2  => __( 'Custom field updated.', 'remote-notifications' ),
+			3  => __( 'Custom field deleted.', 'remote-notifications' ),
+			4  => __( 'Notification updated.', 'remote-notifications' ),
 			/* translators: %s: date and time of the revision */
-			5 => isset($_GET['revision']) ? sprintf( __( "$singular restored to revision from %s", 'remote-notifications'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
-			6 => sprintf( __( "$singular published. <a href='%s'>View $singular</a>", 'remote-notifications'), esc_url( get_permalink($post_ID) ) ),
-			7 => __( "$singular saved.", 'remote-notifications' ),
-			8 => sprintf( __( "$singular submitted. <a target='_blank' href='%s'>Preview $singular</a>", 'remote-notifications'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
-			9 => sprintf( __( "$singular scheduled for: <strong>%1$s</strong>. <a target='_blank' href='%2$s'>Preview $singular</a>", 'remote-notifications'),
-			// translators: Publish box date format, see http://php.net/date
-				date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ), esc_url( get_permalink($post_ID) ) ),
-			10 => sprintf( __( "$singular draft updated. <a target='_blank' href='%s'>Preview $singular</a>", 'remote-notifications'), esc_url( add_query_arg( 'preview', 'true', get_permalink($post_ID) ) ) ),
+			5  => isset( $_GET['revision'] ) ? sprintf( __( 'Notification restored to revision from %s', 'remote-notifications' ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+			6  => __( 'Notification published.', 'remote-notifications' ),
+			7  => __( 'Notification saved.', 'remote-notifications' ),
+			8  => __( 'Notification submitted.', 'remote-notifications' ),
+			9  => sprintf(
+				__( 'Notification scheduled for: <strong>%1$s</strong>.', 'remote-notifications' ),
+				// translators: Publish box date format, see http://php.net/date
+				date_i18n( __( 'M j, Y @ G:i', 'remote-notifications' ), strtotime( $post->post_date ) )
+			),
+			10 => __( 'Notification draft updated.', 'remote-notifications' )
 		);
+
+		if ( $post_type_object->publicly_queryable ) {
+			$permalink = get_permalink( $post->ID );
+
+			$view_link = sprintf( ' <a href="%s">%s</a>', esc_url( $permalink ), __( 'View notification', 'remote-notifications' ) );
+			$messages[ $post_type ][1] .= $view_link;
+			$messages[ $post_type ][6] .= $view_link;
+			$messages[ $post_type ][9] .= $view_link;
+
+			$preview_permalink = add_query_arg( 'preview', 'true', $permalink );
+			$preview_link      = sprintf( ' <a target="_blank" href="%s">%s</a>', esc_url( $preview_permalink ), __( 'Preview notification', 'remote-notifications' ) );
+			$messages[ $post_type ][8] .= $preview_link;
+			$messages[ $post_type ][10] .= $preview_link;
+		}
 
 		return $messages;
 	}
