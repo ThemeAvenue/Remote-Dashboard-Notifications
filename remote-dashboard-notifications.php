@@ -14,7 +14,7 @@
  * Plugin Name:       Remote Dashboard Notifications
  * Plugin URI:        https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
  * Description:       Remote Dashboard Notifications is made for themes and plugins developers who want to send short notifications to their users.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Author:            ThemeAvenue
  * Author URI:        http://themeavenue.net
  * Text Domain:       remote-notifications

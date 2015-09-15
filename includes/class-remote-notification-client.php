@@ -118,7 +118,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Instantiate the plugin
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return void
 	 */
 	public function init() {
@@ -136,7 +136,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Get the notification message
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return string
 	 */
 	public function get_notice() {
@@ -152,7 +152,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Retrieve the notice from the transient or from the remote server
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return mixed
 	 */
 	protected function fetch_notice() {
@@ -170,7 +170,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Get the remote server URL
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return string
 	 */
 	protected function get_remote_url() {
@@ -184,7 +184,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Maybe get a notification from the remote server
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return string|WP_Error
 	 */
 	protected function remote_get_notice() {
@@ -226,7 +226,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Check if the notification returned by the server is an error
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 *
 	 * @param object $notification Notification returned
 	 *
@@ -245,7 +245,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Get the error message returned by the remote server
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 *
 	 * @param object $notification Notification returned
 	 *
@@ -268,7 +268,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Get the payload required for querying the remote server
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return string
 	 */
 	protected function get_payload() {
@@ -278,7 +278,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Get the full URL used for the remote get
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return string
 	 */
 	protected function build_query_url() {
@@ -288,7 +288,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Check if the notification has been dismissed
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return bool
 	 */
 	protected function is_notification_dismissed() {
@@ -308,7 +308,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Check if the notification can be displayed for the current post type
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return bool
 	 */
 	protected function is_post_type_restricted() {
@@ -337,7 +337,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Check if the notification has started yet
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return bool
 	 */
 	protected function is_notification_started() {
@@ -353,7 +353,7 @@ class TAV_Remote_Notification_Client {
 	/**
 	 * Check if the notification has expired
 	 *
-	 * @since 0.2.0
+	 * @since 1.2.0
 	 * @return bool
 	 */
 	protected function has_notification_ended() {
