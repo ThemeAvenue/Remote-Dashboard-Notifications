@@ -27,6 +27,62 @@ if ( ! defined( 'WPINC' ) ) {
 class TAV_Remote_Notification_Client {
 
 	/**
+	 * Channel ID
+	 *
+	 * @var int
+	 */
+	protected $id;
+
+	/**
+	 * Channel identification key
+	 *
+	 * @var string
+	 */
+	protected $key;
+
+	/**
+	 * Notice unique identifier
+	 *
+	 * @var string
+	 */
+	protected $notice_id;
+
+	/**
+	 * Notification server URL
+	 *
+	 * @var string
+	 */
+	protected $server;
+
+	/**
+	 * Notification caching delay
+	 *
+	 * @var int
+	 */
+	protected $cache;
+
+	/**
+	 * Whether to activate the debug mode or not
+	 *
+	 * @var bool
+	 */
+	protected $debug;
+
+	/**
+	 * Error message
+	 *
+	 * @var string
+	 */
+	protected $error;
+
+	/**
+	 * Notification
+	 *
+	 * @var string|object
+	 */
+	protected $notice;
+
+	/**
 	 * Class version.
 	 *
 	 * @since    0.1.0
@@ -38,160 +94,273 @@ class TAV_Remote_Notification_Client {
 	public function __construct( $channel_id = false, $channel_key = false, $server = false, $debug = false ) {
 
 		/* Don't continue during Ajax process */
-		if ( !is_admin() || defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		if ( ! is_admin() || defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			return;
 		}
 
-		$this->id     = intval( $channel_id );
-		$this->key    = sanitize_key( $channel_key );
-		$this->server = esc_url( $server );
-		$this->notice = false;
-		$this->cache  = apply_filters( 'rn_notice_caching_time', 6 );
-		$this->debug  = $debug;
-		$this->error  = null;
+		$this->id        = (int) $channel_id;
+		$this->key       = sanitize_key( $channel_key );
+		$this->server    = esc_url( $server );
+		$this->notice_id = $this->id . substr( $this->key, 0, 5 );
+		$this->cache     = apply_filters( 'rn_notice_caching_time', 6 );
+		$this->debug     = $debug;
+		$this->error     = null;
 
 		/* The plugin can't work without those 2 parameters */
 		if ( false === ( $this->id || $this->key || $this->server ) ) {
 			return;
 		}
 
+		$this->init();
+
+	}
+
+	/**
+	 * Instantiate the plugin
+	 *
+	 * @since 0.2.0
+	 * @return void
+	 */
+	public function init() {
+
 		/* Call the dismiss method before testing for Ajax */
 		if ( isset( $_GET['rn'] ) && isset( $_GET['notification'] ) ) {
 			add_action( 'init', array( $this, 'dismiss' ) );
 		}
 
-		add_action( 'init', array( $this, 'request_server' ) );
+		add_action( 'admin_print_styles', array( $this, 'style' ), 100 );
+		add_action( 'admin_notices', array( $this, 'show_notice' ) );
 
 	}
 
 	/**
-	 * Send a request to notification server
+	 * Get the notification message
 	 *
-	 * The distant WordPress notification server is
-	 * queried using the WordPress HTTP API.
-	 *
-	 * @since 0.1.0
-	 * @return void
+	 * @since 0.2.0
+	 * @return string
 	 */
-	public function request_server() {
+	public function get_notice() {
 
-		/* Current channel ID */
-		$channel_id = $this->id;
+		if ( is_null( $this->notice ) ) {
+			$this->notice = $this->fetch_notice();
+		}
 
-		/* Current channel key */
-		$channel_key = $this->key;
+		return $this->notice;
 
-		/* Generate a unique identifyer used for the transient */
-		$uniqid = $channel_id . substr( $channel_key, 0, 5 );
+	}
 
-		/* Prepare the payload to send to server */
-		$payload = base64_encode( json_encode( array( 'channel' => $channel_id, 'key' => $channel_key ) ) );
+	/**
+	 * Retrieve the notice from the transient or from the remote server
+	 *
+	 * @since 0.2.0
+	 * @return mixed
+	 */
+	protected function fetch_notice() {
 
-		/* Get the endpoint URL ready */
-		$url = add_query_arg( array( 'payload' => $payload ), $this->server );
+		$content = get_transient( "rn_last_notification_$this->notice_id" );
 
-		/* Content is false at first */
-		$content = get_transient( "rn_last_notification_$uniqid" );
+		if ( false === $content ) {
+			$content = $this->remote_get_notice();
+		}
 
-		/* Set the request response to null */
-		$request = null;
+		return $content;
 
-		/* If no notice is present in DB we query the server */
-		if ( false === $content || defined( 'RDN_DEV' ) && RDN_DEV ) {
+	}
 
-			/* Query the server */
-			$request = wp_remote_get( $url, array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
+	/**
+	 * Get the remote server URL
+	 *
+	 * @since 0.2.0
+	 * @return string
+	 */
+	protected function get_remote_url() {
 
-			/* If we have a WP_Error object we abort */
-			if ( is_wp_error( $request ) ) {
-				return;
-			}
+		$url = explode( '?', $this->server );
 
-			/* Check if we have a valid response */
-			if ( is_array( $request ) && isset( $request['response']['code'] ) && 200 === intval( $request['response']['code'] ) ) {
+		return esc_url( $url[0] );
 
-				/* Get the response body */
-				if ( isset( $request['body'] ) ) {
+	}
 
-					/**
-					 * Decode the response JSON string
-					 */
-					$content = json_decode( $request['body'] );
+	/**
+	 * Maybe get a notification from the remote server
+	 *
+	 * @since 0.2.0
+	 * @return string|WP_Error
+	 */
+	protected function remote_get_notice() {
 
-					/**
-					 * Check if the payload is in a usable JSON format
-					 */
-					if ( version_compare( phpversion(), '5.3.0', '>=' ) ) {
+		/* Query the server */
+		$response = wp_remote_get( $this->build_query_url(), array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
 
-						if ( ! ( json_last_error() == JSON_ERROR_NONE ) ) {
-							return;
-						}
+		/* If we have a WP_Error object we abort */
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
 
-					} else {
+		if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			return new WP_Error( 'invalid_response', sprintf( __( 'The server response was invalid (code %s)', 'remote-notifications' ), wp_remote_retrieve_response_code( $response ) ) );
+		}
 
-						if ( $content == NULL ) {
-							return;
-						}
+		$body = wp_remote_retrieve_body( $response );
 
-					}
+		if ( empty( $body ) ) {
+			return new WP_Error( 'empty_response', __( 'The server response is empty', 'remote-notifications' ) );
+		}
 
-					set_transient( "rn_last_notification_$uniqid", $content, $this->cache*60*60 );
+		$body = json_decode( $body );
 
-				}			
+		if ( is_null( $body ) ) {
+			return new WP_Error( 'json_decode_error', __( 'Cannot decode the response content', 'remote-notifications' ) );
+		}
 
+		if ( $this->is_notification_error( $body ) ) {
+			return new WP_Error( 'notification_error', $this->get_notification_error_message( $body ) );
+		}
+
+		set_transient( "rn_last_notification_$this->notice_id", $body, $this->cache*60*60 );
+
+		return $body;
+
+	}
+
+	/**
+	 * Check if the notification returned by the server is an error
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param object $notification Notification returned
+	 *
+	 * @return bool
+	 */
+	protected function is_notification_error( $notification ) {
+
+		if ( false === $this->get_notification_error_message( $notification ) ) {
+			return false;
+		}
+
+		return true;
+
+	}
+
+	/**
+	 * Get the error message returned by the remote server
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param object $notification Notification returned
+	 *
+	 * @return bool|string
+	 */
+	protected function get_notification_error_message( $notification ) {
+
+		if ( ! is_object( $notification ) ) {
+			return false;
+		}
+
+		if ( ! isset( $notification->error ) ) {
+			return false;
+		}
+
+		return sanitize_text_field( $notification->error );
+
+	}
+
+	/**
+	 * Get the payload required for querying the remote server
+	 *
+	 * @since 0.2.0
+	 * @return string
+	 */
+	protected function get_payload() {
+		return base64_encode( json_encode( array( 'channel' => $this->id, 'key' => $this->key ) ) );
+	}
+
+	/**
+	 * Get the full URL used for the remote get
+	 *
+	 * @since 0.2.0
+	 * @return string
+	 */
+	protected function build_query_url() {
+		return add_query_arg( array( 'post_type' => 'notification', 'payload' => $this->get_payload() ), $this->get_remote_url() );
+	}
+
+	/**
+	 * Check if the notification has been dismissed
+	 *
+	 * @since 0.2.0
+	 * @return bool
+	 */
+	protected function is_notification_dismissed() {
+
+		$dismissed = get_option( '_rn_dismissed' );
+
+		if ( is_array( $dismissed ) && in_array( $this->get_notice()->slug, $dismissed ) ) {
+			return true;
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Check if the notification can be displayed for the current post type
+	 *
+	 * @since 0.2.0
+	 * @return bool
+	 */
+	protected function is_post_type_restricted() {
+
+		/* If the type array isn't empty we have a limitation */
+		if ( isset( $this->get_notice()->type ) && is_array( $this->get_notice()->type ) && ! empty( $this->get_notice()->type ) ) {
+
+			/* Get current post type */
+			$pt = get_post_type();
+
+			/**
+			 * If the current post type can't be retrieved
+			 * or if it's not in the allowed post types,
+			 * then we don't display the admin notice.
+			 */
+			if ( false === $pt || ! in_array( $pt, $this->get_notice()->type ) ) {
+				return true;
 			}
 
 		}
 
-		/**
-		 * If the JSON string has been decoded we can go ahead
-		 */
-		if ( is_object( $content ) ) {
+		return false;
 
-			if ( isset( $content->error ) ) {
+	}
 
-				/* Display debug info in the admin footer */
-				if ( true === $this->debug ) {
+	/**
+	 * Check if the notification has started yet
+	 *
+	 * @since 0.2.0
+	 * @return bool
+	 */
+	protected function is_notification_started() {
 
-					/* Save the error message */
-					$this->error = $content->error;
-
-					/* Display it commented in the footer */
-					add_action( 'admin_footer', array( $this, 'debug_info' ) );
-
-				}
-
-				/* Stop */
-				return;
-
-			}
-
-			$this->notice = $content;
-
-			/**
-			 * Check if notice has already been dismissed
-			 */
-			$dismissed = get_option( '_rn_dismissed' );
-
-			if ( is_array( $dismissed ) && in_array( $content->slug, $dismissed ) ) {
-				return;
-			}
-
-			/**
-			 * Add the notice style
-			 */
-			add_action( 'admin_print_styles', array( $this, 'style' ), 100 );
-
-			/**
-			 * Add the notice to WP dashboard
-			 */
-			add_action( 'admin_notices', array( $this, 'show_notice' ) );
-
-		} else {
-
-			return;
-
+		if ( isset( $this->get_notice()->date_start ) && ! empty( $this->get_notice()->date_start ) && strtotime( $this->get_notice()->date_start ) < time() ) {
+			return true;
 		}
+
+		return false;
+
+	}
+
+	/**
+	 * Check if the notification has expired
+	 *
+	 * @since 0.2.0
+	 * @return bool
+	 */
+	protected function has_notification_ended() {
+
+		if ( isset( $this->get_notice()->date_end ) && ! empty( $this->get_notice()->date_end ) && strtotime( $this->get_notice()->date_end ) < time() ) {
+			return true;
+		}
+
+		return false;
 
 	}
 
@@ -210,38 +379,25 @@ class TAV_Remote_Notification_Client {
 		/**
 		 * @var object $content
 		 */
-		$content = $this->notice;
+		$content = $this->get_notice();
 
-		/* If there is no content we abort */
-		if ( false === $content ) {
+		if ( empty( $content ) || is_wp_error( $content ) ) {
 			return;
 		}
 
-		/* If the type array isn't empty we have a limitation */
-		if ( isset( $content->type ) && is_array( $content->type ) && !empty( $content->type ) ) {
-
-			/* Get current post type */
-			$pt = get_post_type();
-
-			/**
-			 * If the current post type can't be retrieved
-			 * or if it's not in the allowed post types,
-			 * then we don't display the admin notice.
-			 */
-			if ( false === $pt || !in_array( $pt, $content->type ) ) {
-				return;
-			}
-
-		}
-
-		$start = $content->date_start;
-		$end   = $content->date_end;
-
-		if ( ! empty( $start ) && strtotime( $start ) > time() ) {
+		if ( $this->is_notification_dismissed() ) {
 			return;
 		}
 
-		if ( ! empty( $end ) && strtotime( $end ) < time() ) {
+		if ( $this->is_post_type_restricted() ) {
+			return;
+		}
+
+		if ( ! $this->is_notification_started() ) {
+			return;
+		}
+
+		if ( $this->has_notification_ended() ) {
 			return;
 		}
 
