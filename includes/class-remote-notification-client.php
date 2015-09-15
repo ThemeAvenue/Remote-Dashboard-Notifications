@@ -62,13 +62,6 @@ class TAV_Remote_Notification_Client {
 	protected $cache;
 
 	/**
-	 * Whether to activate the debug mode or not
-	 *
-	 * @var bool
-	 */
-	protected $debug;
-
-	/**
 	 * Error message
 	 *
 	 * @var string
@@ -89,9 +82,9 @@ class TAV_Remote_Notification_Client {
 	 *
 	 * @var      string
 	 */
-	protected static $version = '0.1.3';
+	protected static $version = '0.2.0';
 
-	public function __construct( $channel_id = false, $channel_key = false, $server = false, $debug = false ) {
+	public function __construct( $channel_id = false, $channel_key = false, $server = false ) {
 
 		/* Don't continue during Ajax process */
 		if ( ! is_admin() || defined( 'DOING_AJAX' ) && DOING_AJAX ) {
@@ -103,7 +96,6 @@ class TAV_Remote_Notification_Client {
 		$this->server    = esc_url( $server );
 		$this->notice_id = $this->id . substr( $this->key, 0, 5 );
 		$this->cache     = apply_filters( 'rn_notice_caching_time', 6 );
-		$this->debug     = $debug;
 		$this->error     = null;
 
 		/* The plugin can't work without those 2 parameters */
