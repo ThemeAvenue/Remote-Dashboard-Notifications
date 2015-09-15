@@ -69,7 +69,7 @@ if ( is_admin() ) {
 	}
 
 	if( class_exists( 'TAV_Remote_Notification_Client' ) ) {
-		$rdn = new TAV_Remote_Notification_Client( 3, '0a075eda8c3be0ed', 'http://api.themeavenue.net?post_type=notification' );
+		$rdn = new TAV_Remote_Notification_Client( 4, '0a075eda8c3be0ed', 'http://api.themeavenue.net' );
 	}
 
 }
