@@ -60,6 +60,8 @@ class Remote_Notifications_Admin {
 		add_action( 'rn-channel_edit_form_fields', array( $this, 'show_channel_key' ), 10, 2 );
 		add_action( 'add_meta_boxes', array( $this, 'metabox' ) );
 		add_action( 'save_post', array( $this, 'save_settings' ) );
+		add_filter( 'manage_notification_posts_columns', array( $this, 'start_end_dates_columns' ), 10, 1 );
+		add_action( 'manage_notification_posts_custom_column' , array( $this, 'start_end_dates_columns_content' ), 10, 2 );
 
 	}
 
@@ -261,6 +263,100 @@ class Remote_Notifications_Admin {
 		// Update the meta field in the database.
 		return update_post_meta( $post_id, '_rn_settings', $mydata );
 
+	}
+
+	/**
+	 * Add start and end dates columns
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param $columns
+	 *
+	 * @return array
+	 */
+	public function start_end_dates_columns( $columns ) {
+
+		$new = array();
+
+		foreach ( $columns as $id => $label ) {
+
+			if ( 'date' === $id ) {
+				$new['rn_start'] = __( 'Starts', 'remote-notifications' );
+				$new['rn_end']   = __( 'Ends', 'remote-notifications' );
+			}
+
+			$new[$id] = $label;
+
+			if ( 'title' === $id ) {
+				$new['rn_status'] = __( 'Status', 'remote-notifications' );
+			}
+
+		}
+
+		return $new;
+
+	}
+
+	/**
+	 * Start and end dates columns content
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param $column
+	 * @param $post_id
+	 *
+	 * @return void
+	 */
+	public function start_end_dates_columns_content( $column, $post_id ) {
+
+		$settings = get_post_meta( $post_id, '_rn_settings', true );
+		$start = isset( $settings['date_start'] ) ? esc_attr( $settings['date_start'] ) : '';
+		$end = isset( $settings['date_end'] ) ? esc_attr( $settings['date_end'] ) : '';
+
+		switch ( $column ) {
+
+			case 'rn_start' :
+				echo ! empty( $start ) ? date( get_option( 'date_format' ), strtotime( $start ) ) : '';
+				break;
+
+			case 'rn_end' :
+				echo ! empty( $end ) ? date( get_option( 'date_format' ), strtotime( $end ) ) : '';
+				break;
+
+			case 'rn_status':
+
+				$channel = get_the_terms( $post_id, 'rn-channel' );
+
+				if ( empty( $channel ) ) {
+					echo '<strong>' . __( 'Won&#039;t Run', 'remote-notifications' ) . '</strong>';
+					echo '<br><em>' . __( 'No channel set', 'remote-notifications' ) . '</em>';
+					continue;
+				}
+
+				$status = '';
+
+				if ( empty( $start ) || strtotime( $start ) < time() ) {
+
+					if ( empty( $end ) ) {
+						$status = __( '<strong>Running</strong> (endless)', 'remote-notifications' );
+					} else {
+
+						if ( strtotime( $end ) < time() ) {
+							$status = __( 'Ended', 'remote-notifications' );
+						} else {
+							$status = '<strong>' . __( 'Running', 'remote-notifications' ) . '</strong>';
+						}
+					}
+
+				} else {
+					$status = __( 'Scheduled', 'remote-notifications' );
+				}
+
+				echo $status;
+
+				break;
+
+		}
 	}
 	
 }
