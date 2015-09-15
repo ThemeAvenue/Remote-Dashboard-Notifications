@@ -293,7 +293,9 @@ class TAV_Remote_Notification_Client {
 	 */
 	protected function is_notification_dismissed() {
 
-		$dismissed = get_option( '_rn_dismissed' );
+		global $current_user;
+		
+		$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
 
 		if ( is_array( $dismissed ) && in_array( $this->get_notice()->slug, $dismissed ) ) {
 			return true;
@@ -460,6 +462,8 @@ class TAV_Remote_Notification_Client {
 	 */
 	public function dismiss() {
 
+		global $current_user;
+
 		/* Check if we have all the vars */
 		if ( !isset( $_GET['rn'] ) || !isset( $_GET['notification'] ) ) {
 			return;
@@ -471,7 +475,7 @@ class TAV_Remote_Notification_Client {
 		}
 
 		/* Get dismissed list */
-		$dismissed = get_option( '_rn_dismissed', array() );
+		$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
 
 		/* Add the current notice to the list if needed */
 		if ( is_array( $dismissed ) && !in_array( $_GET['notification'], $dismissed ) ) {
@@ -479,7 +483,7 @@ class TAV_Remote_Notification_Client {
 		}
 
 		/* Update option */
-		update_option( '_rn_dismissed', $dismissed );
+		update_user_meta( $current_user->ID, '_rn_dismissed', $dismissed );
 
 		/* Get redirect URL */
 		$args = array();
