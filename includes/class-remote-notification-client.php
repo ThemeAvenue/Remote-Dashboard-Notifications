@@ -234,8 +234,8 @@ class TAV_Remote_Notification_Client {
 
 		}
 
-		$start = $content->starts;
-		$end   = $content->ends;
+		$start = $content->date_start;
+		$end   = $content->date_end;
 
 		if ( ! empty( $start ) && strtotime( $start ) > time() ) {
 			return;
