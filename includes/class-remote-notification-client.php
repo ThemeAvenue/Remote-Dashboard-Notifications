@@ -516,40 +516,6 @@ class TAV_Remote_Notification_Client {
 	<?php }
 
 	/**
-	 * Dismiss notice using Ajax
-	 *
-	 * This function is NOT used. Testing only.
-	 */
-	public function script() {
-
-		$url = admin_url();
-		?>
-
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-
-			var prout = 'prout';
-
-			$('#rn-dismiss').on('click', function(event) {
-				event.preventDefault();
-				$.ajax({
-					type: "GET",
-					url: <?php echo $url; ?>,
-					data: prout
-				});
-				console.log('clicked');
-			});
-
-			return false;
-
-		});
-		</script>
-
-		<?php
-
-	}
-
-	/**
 	 * Debug info.
 	 *
 	 * Display an error message commented in the admin footer.
