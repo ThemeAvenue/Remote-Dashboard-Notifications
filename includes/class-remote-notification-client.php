@@ -24,510 +24,662 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-class TAV_Remote_Notification_Client {
+if ( ! class_exists( 'TAV_Remote_Notification_Client' ) ) {
 
-	/**
-	 * Channel ID
-	 *
-	 * @var int
-	 */
-	protected $id;
+	class TAV_Remote_Notification_Client {
 
-	/**
-	 * Channel identification key
-	 *
-	 * @var string
-	 */
-	protected $key;
+		/**
+		 * Channel ID
+		 *
+		 * @var int
+		 */
+		protected $id;
 
-	/**
-	 * Notice unique identifier
-	 *
-	 * @var string
-	 */
-	protected $notice_id;
+		/**
+		 * Channel identification key
+		 *
+		 * @var string
+		 */
+		protected $key;
 
-	/**
-	 * Notification server URL
-	 *
-	 * @var string
-	 */
-	protected $server;
+		/**
+		 * Notice unique identifier
+		 *
+		 * @var string
+		 */
+		protected $notice_id;
 
-	/**
-	 * Notification caching delay
-	 *
-	 * @var int
-	 */
-	protected $cache;
+		/**
+		 * Notification server URL
+		 *
+		 * @var string
+		 */
+		protected $server;
 
-	/**
-	 * Error message
-	 *
-	 * @var string
-	 */
-	protected $error;
+		/**
+		 * Notification caching delay
+		 *
+		 * @var int
+		 */
+		protected $cache;
 
-	/**
-	 * Notification
-	 *
-	 * @var string|object
-	 */
-	protected $notice;
+		/**
+		 * Error message
+		 *
+		 * @var string
+		 */
+		protected $error;
 
-	/**
-	 * Class version.
-	 *
-	 * @since    0.1.0
-	 *
-	 * @var      string
-	 */
-	protected static $version = '0.2.0';
+		/**
+		 * Notification
+		 *
+		 * @var string|object
+		 */
+		protected $notice;
 
-	public function __construct( $channel_id = false, $channel_key = false, $server = false ) {
+		/**
+		 * Class version.
+		 *
+		 * @since    0.1.0
+		 *
+		 * @var      string
+		 */
+		protected static $version = '0.2.0';
 
-		/* Don't continue during Ajax process */
-		if ( ! is_admin() || defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-			return;
+		public function __construct( $channel_id = false, $channel_key = false, $server = false ) {
+
+			/* Don't continue during Ajax process */
+			if ( ! is_admin() ) {
+				return;
+			}
+
+			$this->id        = (int) $channel_id;
+			$this->key       = sanitize_key( $channel_key );
+			$this->server    = esc_url( $server );
+			$this->notice_id = $this->id . substr( $this->key, 0, 5 );
+			$this->cache     = apply_filters( 'rn_notice_caching_time', 6 );
+			$this->error     = null;
+
+			/* The plugin can't work without those 2 parameters */
+			if ( false === ( $this->id || $this->key || $this->server ) ) {
+				return;
+			}
+
+			$this->init();
+
 		}
 
-		$this->id        = (int) $channel_id;
-		$this->key       = sanitize_key( $channel_key );
-		$this->server    = esc_url( $server );
-		$this->notice_id = $this->id . substr( $this->key, 0, 5 );
-		$this->cache     = apply_filters( 'rn_notice_caching_time', 6 );
-		$this->error     = null;
+		/**
+		 * Instantiate the plugin
+		 *
+		 * @since 1.2.0
+		 * @return void
+		 */
+		public function init() {
 
-		/* The plugin can't work without those 2 parameters */
-		if ( false === ( $this->id || $this->key || $this->server ) ) {
-			return;
+			/* Call the dismiss method before testing for Ajax */
+			if ( isset( $_GET['rn'] ) && isset( $_GET['notification'] ) ) {
+				add_action( 'init', array( $this, 'dismiss' ) );
+			}
+
+			add_action( 'admin_print_styles', array( $this, 'style' ), 100 );
+			add_action( 'admin_notices', array( $this, 'show_notice' ) );
+			add_action( 'wp_ajax_rdn_fetch_notifications', array( $this, 'remote_get_notice_ajax' ) );
+			add_filter( 'heartbeat_received', array( $this, 'heartbeat' ), 10, 2 );
+			add_filter( 'rdn_maybe_fetch', array( $this, 'maybe_fetch' ) );
+
 		}
 
-		$this->init();
+		/**
+		 * Add the current notice to the script that hooks into the Heartbeat API
+		 *
+		 * @since 1.3.0
+		 *
+		 * @param array $notices Notices to maybe fetch
+		 *
+		 * @return array
+		 */
+		public function maybe_fetch( $notices ) {
+			$notices[] = $this->notice_id;
 
-	}
-
-	/**
-	 * Instantiate the plugin
-	 *
-	 * @since 1.2.0
-	 * @return void
-	 */
-	public function init() {
-
-		/* Call the dismiss method before testing for Ajax */
-		if ( isset( $_GET['rn'] ) && isset( $_GET['notification'] ) ) {
-			add_action( 'init', array( $this, 'dismiss' ) );
+			return $notices;
 		}
 
-		add_action( 'admin_print_styles', array( $this, 'style' ), 100 );
-		add_action( 'admin_notices', array( $this, 'show_notice' ) );
+		/**
+		 * Hook into the Heartbeat API.
+		 *
+		 * @since 1.3.0
+		 *
+		 * @param  array $response Heartbeat tick response
+		 * @param  array $data     Heartbeat tick data
+		 *
+		 * @return array           Updated Heartbeat tick response
+		 */
+		function heartbeat( $response, $data ) {
 
-	}
+			if ( isset( $data['rdn_maybe_fetch'] ) ) {
 
-	/**
-	 * Get the notification message
-	 *
-	 * @since 1.2.0
-	 * @return string
-	 */
-	public function get_notice() {
+				$notices = $data['rdn_maybe_fetch'];
 
-		if ( is_null( $this->notice ) ) {
-			$this->notice = $this->fetch_notice();
-		}
+				if ( is_array( $notices ) && in_array( $this->notice_id, $notices ) ) {
 
-		return $this->notice;
+					$fetch = get_option( "rdn_fetch_$this->notice_id", false );
 
-	}
+					if ( 'fetch' === $fetch ) {
 
-	/**
-	 * Retrieve the notice from the transient or from the remote server
-	 *
-	 * @since 1.2.0
-	 * @return mixed
-	 */
-	protected function fetch_notice() {
+						if ( ! isset( $response['rdn_fetch'] ) ) {
+							$response['rdn_fetch'] = array();
+						}
 
-		$content = get_transient( "rn_last_notification_$this->notice_id" );
+						$response['rdn_fetch'][] = $this->notice_id;
 
-		if ( false === $content ) {
-			$content = $this->remote_get_notice();
-		}
+						delete_option( "rdn_fetch_$this->notice_id" );
 
-		return $content;
+					}
 
-	}
+				}
 
-	/**
-	 * Get the remote server URL
-	 *
-	 * @since 1.2.0
-	 * @return string
-	 */
-	protected function get_remote_url() {
+			}
 
-		$url = explode( '?', $this->server );
-
-		return esc_url( $url[0] );
-
-	}
-
-	/**
-	 * Maybe get a notification from the remote server
-	 *
-	 * @since 1.2.0
-	 * @return string|WP_Error
-	 */
-	protected function remote_get_notice() {
-
-		/* Query the server */
-		$response = wp_remote_get( $this->build_query_url(), array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
-
-		/* If we have a WP_Error object we abort */
-		if ( is_wp_error( $response ) ) {
 			return $response;
+
 		}
 
-		if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-			return new WP_Error( 'invalid_response', sprintf( __( 'The server response was invalid (code %s)', 'remote-notifications' ), wp_remote_retrieve_response_code( $response ) ) );
+		/**
+		 * Get the notification message
+		 *
+		 * @since 1.2.0
+		 * @return string
+		 */
+		public function get_notice() {
+
+			if ( is_null( $this->notice ) ) {
+				$this->notice = $this->fetch_notice();
+			}
+
+			return $this->notice;
+
 		}
 
-		$body = wp_remote_retrieve_body( $response );
+		/**
+		 * Retrieve the notice from the transient or from the remote server
+		 *
+		 * @since 1.2.0
+		 * @return mixed
+		 */
+		protected function fetch_notice() {
 
-		if ( empty( $body ) ) {
-			return new WP_Error( 'empty_response', __( 'The server response is empty', 'remote-notifications' ) );
+			$content = get_transient( "rn_last_notification_$this->notice_id" );
+
+			if ( false === $content ) {
+				add_option( "rdn_fetch_$this->notice_id", 'fetch' );
+			}
+
+			return $content;
+
 		}
 
-		$body = json_decode( $body );
+		/**
+		 * Get the remote server URL
+		 *
+		 * @since 1.2.0
+		 * @return string
+		 */
+		protected function get_remote_url() {
 
-		if ( is_null( $body ) ) {
-			return new WP_Error( 'json_decode_error', __( 'Cannot decode the response content', 'remote-notifications' ) );
+			$url = explode( '?', $this->server );
+
+			return esc_url( $url[0] );
+
 		}
 
-		set_transient( "rn_last_notification_$this->notice_id", $body, $this->cache*60*60 );
+		/**
+		 * Maybe get a notification from the remote server
+		 *
+		 * @since 1.2.0
+		 * @return string|WP_Error
+		 */
+		protected function remote_get_notice() {
 
-		if ( $this->is_notification_error( $body ) ) {
-			return new WP_Error( 'notification_error', $this->get_notification_error_message( $body ) );
+			/* Query the server */
+			$response = wp_remote_get( $this->build_query_url(), array( 'timeout' => apply_filters( 'rn_http_request_timeout', 5 ) ) );
+
+			/* If we have a WP_Error object we abort */
+			if ( is_wp_error( $response ) ) {
+				return $response;
+			}
+
+			if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+				return new WP_Error( 'invalid_response', sprintf( __( 'The server response was invalid (code %s)', 'remote-notifications' ), wp_remote_retrieve_response_code( $response ) ) );
+			}
+
+			$body = wp_remote_retrieve_body( $response );
+
+			if ( empty( $body ) ) {
+				return new WP_Error( 'empty_response', __( 'The server response is empty', 'remote-notifications' ) );
+			}
+
+			$body = json_decode( $body );
+
+			if ( is_null( $body ) ) {
+				return new WP_Error( 'json_decode_error', __( 'Cannot decode the response content', 'remote-notifications' ) );
+			}
+
+			set_transient( "rn_last_notification_$this->notice_id", $body, $this->cache * 60 * 60 );
+
+			if ( $this->is_notification_error( $body ) ) {
+				return new WP_Error( 'notification_error', $this->get_notification_error_message( $body ) );
+			}
+
+			return $body;
+
 		}
 
-		return $body;
+		/**
+		 * Triggers the remote requests that fetches notices for this particular instance
+		 *
+		 * @since 1.3.0
+		 * @return void
+		 */
+		public function remote_get_notice_ajax() {
 
-	}
+			if ( isset( $_POST['notices'] ) ) {
+				$notices = $_POST['notices'];
+			} else {
+				echo 'No notice ID';
+				die();
+			}
 
-	/**
-	 * Check if the notification returned by the server is an error
-	 *
-	 * @since 1.2.0
-	 *
-	 * @param object $notification Notification returned
-	 *
-	 * @return bool
-	 */
-	protected function is_notification_error( $notification ) {
+			if ( is_array( $notices ) && in_array( $this->notice_id, $notices ) ) {
 
-		if ( false === $this->get_notification_error_message( $notification ) ) {
-			return false;
+				$notice = $this->remote_get_notice();
+
+				if ( is_wp_error( $notice ) ) {
+					echo $notice->get_error_message();
+				} else {
+					echo $notice;
+				}
+
+			}
+
+			die();
+
 		}
 
-		return true;
+		/**
+		 * Check if the notification returned by the server is an error
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param object $notification Notification returned
+		 *
+		 * @return bool
+		 */
+		protected function is_notification_error( $notification ) {
 
-	}
+			if ( false === $this->get_notification_error_message( $notification ) ) {
+				return false;
+			}
 
-	/**
-	 * Get the error message returned by the remote server
-	 *
-	 * @since 1.2.0
-	 *
-	 * @param object $notification Notification returned
-	 *
-	 * @return bool|string
-	 */
-	protected function get_notification_error_message( $notification ) {
-
-		if ( ! is_object( $notification ) ) {
-			return false;
-		}
-
-		if ( ! isset( $notification->error ) ) {
-			return false;
-		}
-
-		return sanitize_text_field( $notification->error );
-
-	}
-
-	/**
-	 * Get the payload required for querying the remote server
-	 *
-	 * @since 1.2.0
-	 * @return string
-	 */
-	protected function get_payload() {
-		return base64_encode( json_encode( array( 'channel' => $this->id, 'key' => $this->key ) ) );
-	}
-
-	/**
-	 * Get the full URL used for the remote get
-	 *
-	 * @since 1.2.0
-	 * @return string
-	 */
-	protected function build_query_url() {
-		return add_query_arg( array( 'post_type' => 'notification', 'payload' => $this->get_payload() ), $this->get_remote_url() );
-	}
-
-	/**
-	 * Check if the notification has been dismissed
-	 *
-	 * @since 1.2.0
-	 * @return bool
-	 */
-	protected function is_notification_dismissed() {
-
-		if ( is_wp_error( $this->get_notice() ) || $this->is_notification_error( $this->get_notice() ) ) {
-			return false;
-		}
-
-		global $current_user;
-		
-		$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
-
-		if ( is_array( $dismissed ) && in_array( $this->get_notice()->slug, $dismissed ) ) {
 			return true;
+
 		}
 
-		return false;
+		/**
+		 * Get the error message returned by the remote server
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param object $notification Notification returned
+		 *
+		 * @return bool|string
+		 */
+		protected function get_notification_error_message( $notification ) {
 
-	}
+			if ( ! is_object( $notification ) ) {
+				return false;
+			}
 
-	/**
-	 * Check if the notification can be displayed for the current post type
-	 *
-	 * @since 1.2.0
-	 * @return bool
-	 */
-	protected function is_post_type_restricted() {
+			if ( ! isset( $notification->error ) ) {
+				return false;
+			}
 
-		/* If the type array isn't empty we have a limitation */
-		if ( isset( $this->get_notice()->type ) && is_array( $this->get_notice()->type ) && ! empty( $this->get_notice()->type ) ) {
+			return sanitize_text_field( $notification->error );
 
-			/* Get current post type */
-			$pt = get_post_type();
+		}
 
-			/**
-			 * If the current post type can't be retrieved
-			 * or if it's not in the allowed post types,
-			 * then we don't display the admin notice.
-			 */
-			if ( false === $pt || ! in_array( $pt, $this->get_notice()->type ) ) {
+		/**
+		 * Get the payload required for querying the remote server
+		 *
+		 * @since 1.2.0
+		 * @return string
+		 */
+		protected function get_payload() {
+			return base64_encode( json_encode( array( 'channel' => $this->id, 'key' => $this->key ) ) );
+		}
+
+		/**
+		 * Get the full URL used for the remote get
+		 *
+		 * @since 1.2.0
+		 * @return string
+		 */
+		protected function build_query_url() {
+			return add_query_arg( array(
+				'post_type' => 'notification',
+				'payload'   => $this->get_payload()
+			), $this->get_remote_url() );
+		}
+
+		/**
+		 * Check if the notification has been dismissed
+		 *
+		 * @since 1.2.0
+		 * @return bool
+		 */
+		protected function is_notification_dismissed() {
+
+			if ( is_wp_error( $this->get_notice() ) || $this->is_notification_error( $this->get_notice() ) ) {
+				return false;
+			}
+
+			global $current_user;
+
+			$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
+
+			if ( is_array( $dismissed ) && in_array( $this->get_notice()->slug, $dismissed ) ) {
 				return true;
 			}
 
-		}
+			return false;
 
-		return false;
-
-	}
-
-	/**
-	 * Check if the notification has started yet
-	 *
-	 * @since 1.2.0
-	 * @return bool
-	 */
-	protected function is_notification_started() {
-
-		if ( isset( $this->get_notice()->date_start ) && ! empty( $this->get_notice()->date_start ) && strtotime( $this->get_notice()->date_start ) < time() ) {
-			return true;
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * Check if the notification has expired
-	 *
-	 * @since 1.2.0
-	 * @return bool
-	 */
-	protected function has_notification_ended() {
-
-		if ( isset( $this->get_notice()->date_end ) && ! empty( $this->get_notice()->date_end ) && strtotime( $this->get_notice()->date_end ) < time() ) {
-			return true;
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * Display the admin notice
-	 *
-	 * The function will do some checks to verify if
-	 * the notice can be displayed on the current page.
-	 * If all the checks are passed, the notice
-	 * is added to the page.
-	 * 
-	 * @since 0.1.0
-	 */
-	public function show_notice() {
-
-		/**
-		 * @var object $content
-		 */
-		$content = $this->get_notice();
-
-		if ( empty( $content ) || is_wp_error( $content ) ) {
-			return;
-		}
-
-		if ( $this->is_notification_dismissed() ) {
-			return;
-		}
-
-		if ( $this->is_post_type_restricted() ) {
-			return;
-		}
-
-		if ( ! $this->is_notification_started() ) {
-			return;
-		}
-
-		if ( $this->has_notification_ended() ) {
-			return;
-		}
-
-		/* Prepare alert class */
-		$style = isset( $content->style ) ? $content->style : 'updated';
-
-		if ( 'updated' == $style ) {
-			$class = $style;
-		}
-
-		elseif ( 'error' == $style ) {
-			$class = 'updated error';
-		}
-
-		else {
-			$class = "updated rn-alert rn-alert-$style";
 		}
 
 		/**
-		 * Prepare the dismiss URL
-		 * 
-		 * @var (string) URL
-		 * @todo get a more accurate URL of the current page
+		 * Check if the notification can be displayed for the current post type
+		 *
+		 * @since 1.2.0
+		 * @return bool
 		 */
-		$args  = array();
-		$nonce = wp_create_nonce( 'rn-dismiss' );
-		$slug  = $content->slug;
+		protected function is_post_type_restricted() {
 
-		array_push( $args, "rn=$nonce" );
-		array_push( $args, "notification=$slug" );
+			/* If the type array isn't empty we have a limitation */
+			if ( isset( $this->get_notice()->type ) && is_array( $this->get_notice()->type ) && ! empty( $this->get_notice()->type ) ) {
 
-		foreach( $_GET as $key => $value ) {
+				/* Get current post type */
+				$pt = get_post_type();
 
-			array_push( $args, "$key=$value" );
+				/**
+				 * If the current post type can't be retrieved
+				 * or if it's not in the allowed post types,
+				 * then we don't display the admin notice.
+				 */
+				if ( false === $pt || ! in_array( $pt, $this->get_notice()->type ) ) {
+					return true;
+				}
+
+			}
+
+			return false;
 
 		}
 
-		$args = implode( '&', $args );
-		$url  = "?$args";
-		?>
+		/**
+		 * Check if the notification has started yet
+		 *
+		 * @since 1.2.0
+		 * @return bool
+		 */
+		protected function is_notification_started() {
 
-		<div class="<?php echo $class; ?>">
-			<?php if ( !in_array( $style, array( 'updated', 'error' ) ) ): ?><a href="<?php echo $url; ?>" id="rn-dismiss" class="rn-dismiss-btn" title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
-			<p><?php echo html_entity_decode( $content->message ); ?></p>
-			<?php if ( in_array( $style, array( 'updated', 'error' ) ) ): ?><p><a href="<?php echo $url; ?>" id="rn-dismiss" class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notifications' ); ?></a></p><?php endif; ?>
-		</div>
-		<?php
+			if ( isset( $this->get_notice()->date_start ) && ! empty( $this->get_notice()->date_start ) && strtotime( $this->get_notice()->date_start ) < time() ) {
+				return true;
+			}
+
+			return false;
+
+		}
+
+		/**
+		 * Check if the notification has expired
+		 *
+		 * @since 1.2.0
+		 * @return bool
+		 */
+		protected function has_notification_ended() {
+
+			if ( isset( $this->get_notice()->date_end ) && ! empty( $this->get_notice()->date_end ) && strtotime( $this->get_notice()->date_end ) < time() ) {
+				return true;
+			}
+
+			return false;
+
+		}
+
+		/**
+		 * Display the admin notice
+		 *
+		 * The function will do some checks to verify if
+		 * the notice can be displayed on the current page.
+		 * If all the checks are passed, the notice
+		 * is added to the page.
+		 *
+		 * @since 0.1.0
+		 */
+		public function show_notice() {
+
+			/**
+			 * @var object $content
+			 */
+			$content = $this->get_notice();
+
+			if ( empty( $content ) || is_wp_error( $content ) ) {
+				return;
+			}
+
+			if ( $this->is_notification_dismissed() ) {
+				return;
+			}
+
+			if ( $this->is_post_type_restricted() ) {
+				return;
+			}
+
+			if ( ! $this->is_notification_started() ) {
+				return;
+			}
+
+			if ( $this->has_notification_ended() ) {
+				return;
+			}
+
+			/* Prepare alert class */
+			$style = isset( $content->style ) ? $content->style : 'updated';
+
+			if ( 'updated' == $style ) {
+				$class = $style;
+			} elseif ( 'error' == $style ) {
+				$class = 'updated error';
+			} else {
+				$class = "updated rn-alert rn-alert-$style";
+			}
+
+			/**
+			 * Prepare the dismiss URL
+			 *
+			 * @var  (string) URL
+			 * @todo get a more accurate URL of the current page
+			 */
+			$args  = array();
+			$nonce = wp_create_nonce( 'rn-dismiss' );
+			$slug  = $content->slug;
+
+			array_push( $args, "rn=$nonce" );
+			array_push( $args, "notification=$slug" );
+
+			foreach ( $_GET as $key => $value ) {
+
+				array_push( $args, "$key=$value" );
+
+			}
+
+			$args = implode( '&', $args );
+			$url  = "?$args";
+			?>
+
+			<div class="<?php echo $class; ?>">
+				<?php if ( ! in_array( $style, array( 'updated', 'error' ) ) ): ?><a href="<?php echo $url; ?>"
+				                                                                     id="rn-dismiss"
+				                                                                     class="rn-dismiss-btn"
+				                                                                     title="<?php _e( 'Dismiss notification', 'remote-notifications' ); ?>">&times;</a><?php endif; ?>
+				<p><?php echo html_entity_decode( $content->message ); ?></p>
+				<?php if ( in_array( $style, array( 'updated', 'error' ) ) ): ?><p><a href="<?php echo $url; ?>"
+				                                                                      id="rn-dismiss"
+				                                                                      class="rn-dismiss-button button-secondary"><?php _e( 'Dismiss', 'remote-notifications' ); ?></a>
+					</p><?php endif; ?>
+			</div>
+			<?php
+
+		}
+
+		/**
+		 * Dismiss notice
+		 *
+		 * When the user dismisses a notice, its slug
+		 * is added to the _rn_dismissed entry in the DB options table.
+		 * This entry is then used to check if a notie has been dismissed
+		 * before displaying it on the dashboard.
+		 *
+		 * @since 0.1.0
+		 */
+		public function dismiss() {
+
+			global $current_user;
+
+			/* Check if we have all the vars */
+			if ( ! isset( $_GET['rn'] ) || ! isset( $_GET['notification'] ) ) {
+				return;
+			}
+
+			/* Validate nonce */
+			if ( ! wp_verify_nonce( sanitize_key( $_GET['rn'] ), 'rn-dismiss' ) ) {
+				return;
+			}
+
+			/* Get dismissed list */
+			$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
+
+			/* Add the current notice to the list if needed */
+			if ( is_array( $dismissed ) && ! in_array( $_GET['notification'], $dismissed ) ) {
+				array_push( $dismissed, $_GET['notification'] );
+			}
+
+			/* Update option */
+			update_user_meta( $current_user->ID, '_rn_dismissed', $dismissed );
+
+			/* Get redirect URL */
+			$args = array();
+
+			/* Get URL args */
+			foreach ( $_GET as $key => $value ) {
+
+				if ( in_array( $key, array( 'rn', 'notification' ) ) ) {
+					continue;
+				}
+
+				array_push( $args, "$key=$value" );
+
+			}
+
+			$args = implode( '&', $args );
+			$url  = "?$args";
+
+			/* Redirect */
+			wp_redirect( $url );
+
+		}
+
+		/**
+		 * Adds inline style for non standard notices
+		 *
+		 * This function will only be called if the notice style is not standard.
+		 *
+		 * @since 0.1.0
+		 */
+		public function style() { ?>
+
+			<style type="text/css">div.rn-alert{padding:15px 35px 15px 15px;margin-bottom:20px;border:1px solid transparent;-webkit-box-shadow:none;box-shadow:none}div.rn-alert p:empty{display:none}div.rn-alert ol,div.rn-alert ol li,div.rn-alert ul,div.rn-alert ul li{list-style:inherit!important}div.rn-alert ol,div.rn-alert ul{padding-left:30px}div.rn-alert hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0;margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}div.rn-alert h1,h2,h3,h4,h5,h6{margin-top:0;color:inherit}div.rn-alert a{font-weight:700}div.rn-alert a:hover{text-decoration:underline}div.rn-alert>p{margin:0;padding:0;line-height:1}div.rn-alert>p,div.rn-alert>ul{margin-bottom:0}div.rn-alert>p+p{margin-top:5px}div.rn-alert .rn-dismiss-btn{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;top:-2px;right:-21px;padding:0;cursor:pointer;background:0;border:0;-webkit-appearance:none;float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0 #fff;opacity:.2;filter:alpha(opacity=20);text-decoration:none}div.rn-alert-success{background-color:#dff0d8;border-color:#d6e9c6;color:#3c763d}div.rn-alert-success hr{border-top-color:#c9e2b3}div.rn-alert-success a{color:#2b542c}div.rn-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#31708f}div.rn-alert-info hr{border-top-color:#a6e1ec}div.rn-alert-info a{color:#245269}div.rn-alert-warning{background-color:#fcf8e3;border-color:#faebcc;color:#8a6d3b}div.rn-alert-warning hr{border-top-color:#f7e1b5}div.rn-alert-warning a{color:#66512c}div.rn-alert-danger{background-color:#f2dede;border-color:#ebccd1;color:#a94442}div.rn-alert-danger hr{border-top-color:#e4b9c0}div.rn-alert-danger a{color:#843534}</style>
+
+		<?php }
+
+		/**
+		 * Debug info.
+		 *
+		 * Display an error message commented in the admin footer.
+		 *
+		 * @since  0.1.2
+		 */
+		public function debug_info() {
+
+			$error = $this->error;
+
+			echo "<!-- RDN Debug Info: $error -->";
+
+		}
 
 	}
 
+}
+
+if ( ! function_exists( 'rdn_script' ) ) {
+
+
+	add_action( 'admin_footer', 'rdn_script' );
 	/**
-	 * Dismiss notice
+	 * Adds the script that hooks into the Heartbeat API
 	 *
-	 * When the user dismisses a notice, its slug
-	 * is added to the _rn_dismissed entry in the DB options table.
-	 * This entry is then used to check if a notie has been dismissed
-	 * before displaying it on the dashboard.
-	 *
-	 * @since 0.1.0
+	 * @since 1.3.0
+	 * @return void
 	 */
-	public function dismiss() {
+	function rdn_script() {
 
-		global $current_user;
+		$maybe_fetch = json_encode( apply_filters( 'rdn_maybe_fetch', array() ) );
 
-		/* Check if we have all the vars */
-		if ( !isset( $_GET['rn'] ) || !isset( $_GET['notification'] ) ) {
+		if ( empty( $maybe_fetch ) ) {
 			return;
-		}
+		} ?>
 
-		/* Validate nonce */
-		if ( !wp_verify_nonce( sanitize_key( $_GET['rn'] ), 'rn-dismiss' ) ) {
-			return;
-		}
+		<script type="text/javascript">
+			jQuery(document).ready(function ($) {
 
-		/* Get dismissed list */
-		$dismissed = array_filter( (array) get_user_meta( $current_user->ID, '_rn_dismissed', true ) );
+				// Hook into the heartbeat-send
+				$(document).on('heartbeat-send', function (e, data) {
+					data['rdn_maybe_fetch'] = <?php echo $maybe_fetch; ?>;
+				});
 
-		/* Add the current notice to the list if needed */
-		if ( is_array( $dismissed ) && !in_array( $_GET['notification'], $dismissed ) ) {
-			array_push( $dismissed, $_GET['notification'] );
-		}
+				// Listen for the custom event "heartbeat-tick" on $(document).
+				$(document).on('heartbeat-tick', function (e, data) {
 
-		/* Update option */
-		update_user_meta( $current_user->ID, '_rn_dismissed', $dismissed );
+					console.log('This is returned');
+					console.log(data);
 
-		/* Get redirect URL */
-		$args = array();
+					if (data.rdn_fetch !== '') {
 
-		/* Get URL args */
-		foreach( $_GET as $key => $value ) {
+						ajax_data = {
+							'action': 'rdn_fetch_notifications',
+							'notices': data.rdn_fetch
+						};
 
-			if ( in_array( $key, array( 'rn', 'notification' ) ) )
-				continue;
+						$.post(ajaxurl, ajax_data, function (response) {
+							console.log(response);
+						});
 
-			array_push( $args, "$key=$value" );
+					}
 
-		}
-
-		$args = implode( '&', $args );
-		$url  = "?$args";
-
-		/* Redirect */
-		wp_redirect( $url );
-
-	}
-
-	/**
-	 * Adds inline style for non standard notices
-	 *
-	 * This function will only be called if the notice style is not standard.
-	 *
-	 * @since 0.1.0
-	 */
-	public function style() { ?>
-
-		<style type="text/css">div.rn-alert{padding:15px;padding-right:35px;margin-bottom:20px;border:1px solid transparent;-webkit-box-shadow:none;box-shadow:none}div.rn-alert p:empty{display:none}div.rn-alert ul,div.rn-alert ul li,div.rn-alert ol,div.rn-alert ol li{list-style:inherit !important}div.rn-alert ul,div.rn-alert ol{padding-left:30px}div.rn-alert hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0;margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}div.rn-alert h1,h2,h3,h4,h5,h6{margin-top:0;color:inherit}div.rn-alert a{font-weight:700}div.rn-alert a:hover{text-decoration:underline}div.rn-alert>p{margin:0;padding:0;line-height:1}div.rn-alert>p,div.rn-alert>ul{margin-bottom:0}div.rn-alert>p+p{margin-top:5px}div.rn-alert .rn-dismiss-btn{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;top:-2px;right:-21px;padding:0;cursor:pointer;background:0;border:0;-webkit-appearance:none;float:right;font-size:21px;font-weight:700;line-height:1;color:#000;text-shadow:0 1px 0 #fff;opacity:.2;filter:alpha(opacity=20);text-decoration:none}div.rn-alert-success{background-color:#dff0d8;border-color:#d6e9c6;color:#3c763d}div.rn-alert-success hr{border-top-color:#c9e2b3}div.rn-alert-success a{color:#2b542c}div.rn-alert-info{background-color:#d9edf7;border-color:#bce8f1;color:#31708f}div.rn-alert-info hr{border-top-color:#a6e1ec}div.rn-alert-info a{color:#245269}div.rn-alert-warning{background-color:#fcf8e3;border-color:#faebcc;color:#8a6d3b}div.rn-alert-warning hr{border-top-color:#f7e1b5}div.rn-alert-warning a{color:#66512c}div.rn-alert-danger{background-color:#f2dede;border-color:#ebccd1;color:#a94442}div.rn-alert-danger hr{border-top-color:#e4b9c0}div.rn-alert-danger a{color:#843534}</style>
+				});
+			});
+		</script>
 
 	<?php }
-
-	/**
-	 * Debug info.
-	 *
-	 * Display an error message commented in the admin footer.
-	 *
-	 * @since  0.1.2
-	 */
-	public function debug_info() {
-
-		$error = $this->error;
-
-		echo "<!-- RDN Debug Info: $error -->";
-
-	}
 
 }
