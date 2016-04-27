@@ -478,15 +478,9 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 		 */
 		protected function get_notice_dismissal_url( $slug ) {
 
-			$args  = array();
-			$nonce = wp_create_nonce( 'rn-dismiss' );
-
-			array_push( $args, "rn=$nonce" );
-			array_push( $args, "notification=$slug" );
-
-			foreach ( $_GET as $key => $value ) {
-				array_push( $args, "$key=$value" );
-			}
+			$args                 = $_GET;
+			$args['rn']           = wp_create_nonce( 'rn-dismiss' );
+			$args['notification'] = trim( $slug );
 
 			return esc_url( add_query_arg( $args, '' ) );
 
