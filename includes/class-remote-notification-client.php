@@ -311,7 +311,7 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 				}
 
 				// Output the admin notice
-				$this->create_admin_notice( $rn->content, $this->get_notice_class( isset( $rn->style ) ? $rn->style : 'updated' ), $this->get_notice_dismissal_url( $rn->slug ) );
+				$this->create_admin_notice( $rn->message, $this->get_notice_class( isset( $rn->style ) ? $rn->style : 'updated' ), $this->get_notice_dismissal_url( $rn->slug ) );
 
 			}
 
