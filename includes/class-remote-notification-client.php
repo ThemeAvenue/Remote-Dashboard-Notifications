@@ -98,7 +98,7 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 
 			// Call the dismiss method before testing for Ajax
 			if ( isset( $_GET['rn'] ) && isset( $_GET['notification'] ) ) {
-				add_action( 'init', array( self::$instance, 'dismiss' ) );
+				add_action( 'plugins_loaded', array( self::$instance, 'dismiss' ) );
 			}
 
 			if ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) {
@@ -538,23 +538,6 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 
 			/* Update option */
 			update_user_meta( $current_user->ID, '_rn_dismissed', $dismissed );
-
-			/* Get redirect URL */
-			$args = array();
-
-			/* Get URL args */
-			foreach ( $_GET as $key => $value ) {
-
-				if ( in_array( $key, array( 'rn', 'notification' ) ) ) {
-					continue;
-				}
-
-				array_push( $args, "$key=$value" );
-
-			}
-
-			// Read-only redirect
-			wp_safe_redirect( add_query_arg( $args, '' ) );
 
 		}
 
