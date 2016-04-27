@@ -383,8 +383,12 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 		 */
 		protected function is_notification_started( $notification ) {
 
-			if ( isset( $notification->date_start ) && ! empty( $notification->date_start ) && strtotime( $notification->date_start ) < time() ) {
+			if ( ! isset( $notification->date_start ) ) {
 				return true;
+			}
+
+			if ( empty( $notification->date_start ) || strtotime( $notification->date_start ) < time() ) {
+					return true;
 			}
 
 			return false;
@@ -402,11 +406,15 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 		 */
 		protected function has_notification_ended( $notification ) {
 
-			if ( isset( $notification->date_end ) && ! empty( $notification->date_end ) && strtotime( $notification->date_end ) < time() ) {
-				return true;
+			if ( ! isset( $notification->date_end ) ) {
+				return false;
+			}
+			
+			if ( empty( $notification->date_end ) || strtotime( $notification->date_end ) > time() ) {
+				return false;
 			}
 
-			return false;
+			return true;
 
 		}
 
