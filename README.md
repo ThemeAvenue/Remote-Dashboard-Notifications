@@ -35,7 +35,7 @@ It is really easy to integrate this feature in a plugin or theme. Only four step
 1. Copy `includes/class-remote-notification-client.php` into the theme / plugin directory
 2. Create a new channel on the server
 3. Get the channel ID & key (in the term edit screen)
-4. Instantiate the class on the client with the server's URL (`http://domain.com?post_type=notification`), the channel ID and key
+4. Register the notification on the client with the server's URL (`http://domain.com`), the channel ID and key
 
 ### Integration examples
 
@@ -44,7 +44,10 @@ It is really easy to integrate this feature in a plugin or theme. Only four step
 Place this into `functions.php`.
 
     require( 'class-remote-notification-client.php' );
-    $notification = new TAV_Remote_Notification_Client( 35, 'f76714a0a97d1186', 'http://server.url?post_type=notification' );
+
+    if ( function_exists( 'rdnc_add_notification' ) ) {
+        rdnc_add_notification( 35, 'f76714a0a97d1186', 'http://server.url' );
+    }
 
 ## Privacy
 
