@@ -68,8 +68,8 @@ if ( is_admin() ) {
 		require_once( RDN_PATH . 'includes/class-remote-notification-client.php' );
 	}
 
-	if( class_exists( 'TAV_Remote_Notification_Client' ) ) {
-		$rdn = new TAV_Remote_Notification_Client( 4, '0a075eda8c3be0ed', 'http://api.themeavenue.net' );
+	if( function_exists( 'rdnc_add_notification' ) ) {
+		rdnc_add_notification( 4, '0a075eda8c3be0ed', 'https://api.themeavenue.net' );
 	}
 
 }
