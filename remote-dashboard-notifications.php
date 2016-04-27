@@ -73,3 +73,5 @@ if ( is_admin() ) {
 	}
 
 }
+
+rdnc_add_notification( 7, 'e9e439bc6478efbb', 'http://awesome-support.dev/' );
