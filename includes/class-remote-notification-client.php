@@ -567,7 +567,7 @@ if ( ! class_exists( 'Remote_Dashboard_Notifications_Client' ) ) {
 			$maybe_fetch = array();
 
 			foreach ( $this->get_notifications() as $id => $n ) {
-				$maybe_fetch[] = $id;
+				$maybe_fetch[] = (string) $id;
 			} ?>
 
 			<script type="text/javascript">
