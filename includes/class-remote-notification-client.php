@@ -1,6 +1,6 @@
 <?php
 /**
- * Remote Dashobard Notifications.
+ * Remote Dashboard Notifications.
  *
  * This class is part of the Remote Dashboard Notifications plugin.
  * This plugin allows you to send notifications to your client's
@@ -16,7 +16,7 @@
  * @link      http://themeavenue.net
  * @link      http://wordpress.org/plugins/remote-dashboard-notifications/
  * @link 	  https://github.com/ThemeAvenue/Remote-Dashboard-Notifications
- * @copyright 2014 ThemeAvenue
+ * @copyright 2016 ThemeAvenue
  */
 
 // If this file is called directly, abort.
